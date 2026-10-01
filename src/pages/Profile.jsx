@@ -1,24 +1,16 @@
 import { useState } from 'react'
 import {
   User,
-  Mail,
-  Phone,
-  Briefcase,
-  Building2,
-  Shield,
   Save,
   Check,
   Lock,
-  Award,
-  Sparkles,
-  Database
+  Sparkles
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { useSurat } from '../context/SuratContext'
+import { hashPassword } from '../lib/crypto'
 
 export default function Profile() {
   const { user, updateProfile } = useAuth()
-  const { stats, syncStatus } = useSurat()
 
   const [formData, setFormData] = useState({
     nama: user?.nama || '',
@@ -38,10 +30,15 @@ export default function Profile() {
     setTimeout(() => setSuccessMsg(''), 3000)
   }
 
-  const handlePasswordSubmit = (e) => {
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault()
-    if (!newPassword.trim()) return
-    setPasswordMsg('Password berhasil diubah!')
+    if (!newPassword.trim() || newPassword.length < 6) {
+      alert('Password baru minimal 6 karakter.')
+      return
+    }
+    const encrypted = await hashPassword(newPassword.trim())
+    await updateProfile({ password: encrypted })
+    setPasswordMsg('Password baru berhasil disimpan dan terenkripsi SHA-256!')
     setNewPassword('')
     setTimeout(() => setPasswordMsg(''), 3000)
   }
@@ -80,185 +77,142 @@ export default function Profile() {
         <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-[#FF7401]/20 rounded-full blur-2xl pointer-events-none"></div>
       </div>
 
-      {/* Grid: Edit Profile & Magang Info */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left (2 cols): Form Edit */}
-        <div className="md:col-span-2 space-y-6">
-          <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs">
-            <h2 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
-              <User className="w-4 h-4 text-[#014181]" />
-              Informasi Biodata Staf
-            </h2>
-            <p className="text-xs text-slate-500 mb-4">
-              Perbarui data kontak dan rincian jabatan Anda
-            </p>
+      {/* Forms: Edit Profile & Keamanan */}
+      <div className="space-y-6">
+        {/* Informasi Biodata Staf */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs">
+          <h2 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
+            <User className="w-4 h-4 text-[#014181]" />
+            Informasi Biodata Staf
+          </h2>
+          <p className="text-xs text-slate-500 mb-4">
+            Perbarui data kontak dan rincian jabatan Anda
+          </p>
 
-            {successMsg && (
-              <div className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
-                <Check className="w-4 h-4" />
-                {successMsg}
-              </div>
-            )}
+          {successMsg && (
+            <div className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+              <Check className="w-4 h-4" />
+              {successMsg}
+            </div>
+          )}
 
-            <form onSubmit={handleProfileSubmit} className="space-y-4 text-xs">
+          <form onSubmit={handleProfileSubmit} className="space-y-4 text-xs">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">
+                Nama Lengkap
+              </label>
+              <input
+                type="text"
+                value={formData.nama}
+                onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#014181] focus:outline-none transition"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block font-bold text-slate-700 mb-1">
-                  Nama Lengkap
+                  Personal Number (PN)
                 </label>
                 <input
                   type="text"
-                  value={formData.nama}
-                  onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#014181] focus:outline-none"
+                  value={formData.pn}
+                  onChange={(e) => setFormData({ ...formData, pn: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#014181] focus:outline-none transition"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Personal Number (PN)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.pn}
-                    onChange={(e) => setFormData({ ...formData, pn: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Email Kantor
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Jabatan / Posisi
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.jabatan}
-                    onChange={(e) => setFormData({ ...formData, jabatan: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Nomor WhatsApp / HP
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.telepon}
-                    onChange={(e) => setFormData({ ...formData, telepon: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2 flex justify-end">
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-[#014181] hover:bg-[#002d5b] text-white font-bold text-xs shadow-md shadow-[#014181]/20 flex items-center gap-1.5 transition"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>Simpan Perubahan</span>
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Ganti Password */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs">
-            <h2 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
-              <Lock className="w-4 h-4 text-[#FF7401]" />
-              Keamanan & Kata Sandi
-            </h2>
-            <p className="text-xs text-slate-500 mb-4">
-              Ganti password akun login portal arsip Anda
-            </p>
-
-            {passwordMsg && (
-              <div className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
-                <Check className="w-4 h-4" />
-                {passwordMsg}
-              </div>
-            )}
-
-            <form onSubmit={handlePasswordSubmit} className="space-y-3 text-xs">
               <div>
                 <label className="block font-bold text-slate-700 mb-1">
-                  Password Baru
+                  Email Kantor
                 </label>
                 <input
-                  type="password"
-                  placeholder="Masukkan password baru"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#014181] focus:outline-none"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#014181] focus:outline-none transition"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Jabatan / Posisi
+                </label>
+                <input
+                  type="text"
+                  value={formData.jabatan}
+                  onChange={(e) => setFormData({ ...formData, jabatan: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#014181] focus:outline-none transition"
                 />
               </div>
 
-              <div className="pt-1 flex justify-end">
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-[#FF7401] hover:bg-[#e06500] text-white font-bold text-xs shadow-md transition"
-                >
-                  Ubah Password
-                </button>
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Nomor WhatsApp / HP
+                </label>
+                <input
+                  type="text"
+                  value={formData.telepon}
+                  onChange={(e) => setFormData({ ...formData, telepon: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#014181] focus:outline-none transition"
+                />
               </div>
-            </form>
-          </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                type="submit"
+                className="px-5 py-2.5 rounded-xl bg-[#014181] hover:bg-[#002d5b] text-white font-bold text-xs shadow-md shadow-[#014181]/20 flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <Save className="w-4 h-4" />
+                <span>Simpan Perubahan</span>
+              </button>
+            </div>
+          </form>
         </div>
 
-        {/* Right (1 col): System & Magang Details */}
-        <div className="space-y-6">
-          {/* Card Info Magang */}
-          <div className="bg-gradient-to-br from-blue-50 to-orange-50/50 rounded-3xl p-6 border border-blue-200/80 shadow-xs space-y-4">
-            <div className="flex items-center gap-2.5 text-[#014181]">
-              <Award className="w-6 h-6 text-[#FF7401]" />
-              <h3 className="font-extrabold text-sm text-slate-900">
-                Laporan Magang Semester 5
-              </h3>
+        {/* Ganti Password */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs">
+          <h2 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2">
+            <Lock className="w-4 h-4 text-[#FF7401]" />
+            Keamanan & Kata Sandi
+          </h2>
+          <p className="text-xs text-slate-500 mb-4">
+            Ganti password akun login portal arsip Anda
+          </p>
+
+          {passwordMsg && (
+            <div className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+              <Check className="w-4 h-4" />
+              {passwordMsg}
+            </div>
+          )}
+
+          <form onSubmit={handlePasswordSubmit} className="space-y-4 text-xs">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">
+                Password Baru
+              </label>
+              <input
+                type="password"
+                placeholder="Masukkan password baru (minimal 6 karakter)"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#014181] focus:outline-none transition"
+              />
             </div>
 
-            <div className="text-xs text-slate-600 space-y-2">
-              <p>
-                <strong>Instansi:</strong> PT Bank Rakyat Indonesia (Persero) Tbk
-              </p>
-              <p>
-                <strong>Unit Kerja:</strong> KCP Iskandar Palembang
-              </p>
-              <p>
-                <strong>Judul Proyek:</strong> Pengembangan Website Admin Sistem Informasi & Penelusuran Cepat Surat Debitur (SP 1, SP 2, SP 3, SP Default, LPJ, PK).
-              </p>
-              <p>
-                <strong>Tujuan Solusi:</strong> Mengeliminasi pencarian berkas manual yang lambat dan rawan hilang/terselip, mempercepat penanganan debitur non-performing loan (NPL) dan monitoring restrukturisasi kredit.
-              </p>
+            <div className="pt-1 flex justify-end">
+              <button
+                type="submit"
+                className="px-4 py-2.5 rounded-xl bg-[#FF7401] hover:bg-[#e06500] text-white font-bold text-xs shadow-md transition cursor-pointer"
+              >
+                Ubah Password
+              </button>
             </div>
-
-            <div className="p-3 bg-white rounded-2xl border border-blue-100 text-[11px] text-slate-700">
-              <span className="font-bold text-[#014181] block mb-1">
-                Kondisi Database / Sinkronisasi:
-              </span>
-              <div className="flex items-center gap-2">
-                <Database className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="font-semibold">{syncStatus}</span>
-              </div>
-              <p className="text-slate-400 mt-1">
-                Data aktif: {stats.total} record debitur terarsip.
-              </p>
-            </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>

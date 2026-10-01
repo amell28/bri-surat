@@ -1,63 +1,173 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { initialUsersList } from '../data/initialUsersData'
-import { initSupabaseClient, isSupabaseConfigured, getSupabaseConfig } from '../lib/supabase'
+import { initSupabaseClient, isSupabaseConfigured } from '../lib/supabase'
+import { hashPassword, verifyPassword } from '../lib/crypto'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  // Load registered users
-  const [users, setUsers] = useState(() => {
-    const saved = localStorage.getItem('bri_surat_users')
-    if (saved) {
-      try {
-        return JSON.parse(saved)
-      } catch (e) {
-        console.error('Failed to parse stored users', e)
-      }
-    }
-    return initialUsersList
-  })
+  // Clear any old legacy localStorage user to ensure opening starts fresh at login
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('bri_surat_current_user')
+  }
 
-  // Start with user = null so website ALWAYS opens directly to Login screen on first visit
+  // Active user session in current browser tab
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('bri_surat_current_user')
-    if (saved) {
-      try {
-        return JSON.parse(saved)
-      } catch (e) {
-        console.error('Failed to parse current user', e)
+    if (typeof window !== 'undefined') {
+      const activeSession = sessionStorage.getItem('bri_surat_current_user')
+      if (activeSession) {
+        try {
+          return JSON.parse(activeSession)
+        } catch (e) {
+          return null
+        }
       }
     }
-    // Default to null so user goes directly to Login
     return null
   })
 
-  const [supabaseReady, setSupabaseReady] = useState(isSupabaseConfigured())
+  const [loading, setLoading] = useState(false)
+  const [users, setUsers] = useState(initialUsersList)
 
-  useEffect(() => {
-    setSupabaseReady(isSupabaseConfigured())
+  // Fetch users directly from Supabase staf_pengguna table
+  const fetchUsersFromSupabase = useCallback(async () => {
+    const client = initSupabaseClient()
+    if (!client) return
+
+    try {
+      const { data, error } = await client
+        .from('staf_pengguna')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (!error && data && data.length > 0) {
+        setUsers(data)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('bri_surat_users', JSON.stringify(data))
+        }
+      }
+    } catch (err) {
+      console.warn('Gagal memuat staf_pengguna dari Supabase:', err)
+    }
   }, [])
 
   useEffect(() => {
-    localStorage.setItem('bri_surat_users', JSON.stringify(users))
-  }, [users])
+    fetchUsersFromSupabase()
+  }, [fetchUsersFromSupabase])
 
+  // Sync active user to sessionStorage
   useEffect(() => {
-    if (user) {
-      localStorage.setItem('bri_surat_current_user', JSON.stringify(user))
-    } else {
-      localStorage.removeItem('bri_surat_current_user')
+    if (typeof window !== 'undefined') {
+      if (user) {
+        sessionStorage.setItem('bri_surat_current_user', JSON.stringify(user))
+      } else {
+        sessionStorage.removeItem('bri_surat_current_user')
+      }
     }
   }, [user])
 
-  // Login handler connected to Supabase
-  const login = async (identifier, password) => {
-    const cleanId = identifier.trim().toLowerCase()
-
-    // 1. Try to query Supabase staf_pengguna table first
+  // ==========================================
+  // REAL SUPABASE REGISTER
+  // Menyimpan langsung ke tabel 'staf_pengguna' di Supabase
+  // ==========================================
+  const register = async (formData) => {
+    setLoading(true)
     const client = initSupabaseClient()
-    if (client) {
-      try {
+
+    const rawPassword = formData.password || '123456'
+    const encryptedPassword = await hashPassword(rawPassword)
+
+    const newStaff = {
+      id: `USR-${Date.now()}`,
+      nama: formData.nama.trim(),
+      pn: formData.pn?.trim() || '00' + Math.floor(100000 + Math.random() * 900000),
+      email: formData.email.trim().toLowerCase(),
+      password: encryptedPassword, // Password tersimpan dalam bentuk terenkripsi SHA-256
+      jabatan: formData.jabatan || 'Staff Administrasi Kredit',
+      role: formData.role || 'Staff',
+      unit: 'KCP Iskandar Palembang',
+      telepon: formData.telepon?.trim() || '-',
+      status: 'Aktif',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
+    }
+
+    try {
+      if (client) {
+        // 1. Simpan baris baru ke tabel staf_pengguna di Supabase (password terenkripsi)
+        const { data: dbData, error: dbError } = await client
+          .from('staf_pengguna')
+          .insert([newStaff])
+          .select()
+
+        if (dbError) {
+          console.error('Error insert staf_pengguna di Supabase:', dbError.message)
+          if (dbError.message.includes('unique') || dbError.message.includes('duplicate')) {
+            return { success: false, message: 'Email atau PN ini sudah terdaftar di Supabase!' }
+          }
+          return { success: false, message: dbError.message }
+        }
+
+        // 2. Daftarkan juga ke Supabase Auth (auth.users yang otomatis terenkripsi bcrypt)
+        try {
+          await client.auth.signUp({
+            email: newStaff.email,
+            password: rawPassword,
+            options: {
+              data: {
+                nama: newStaff.nama,
+                pn: newStaff.pn,
+                jabatan: newStaff.jabatan,
+                role: newStaff.role
+              }
+            }
+          })
+        } catch (authErr) {
+          console.warn('Supabase Auth signUp note:', authErr.message)
+        }
+
+        // 3. Update state lokal
+        const createdUser = dbData && dbData.length > 0 ? dbData[0] : newStaff
+        setUsers((prev) => [createdUser, ...prev.filter((u) => u.email !== createdUser.email)])
+        setUser(createdUser)
+
+        return {
+          success: true,
+          user: createdUser,
+          message: 'Berhasil mendaftar! Akun terenkripsi dan tersimpan di Supabase.'
+        }
+      } else {
+        // Fallback jika offline
+        setUsers((prev) => [newStaff, ...prev])
+        setUser(newStaff)
+        return { success: true, user: newStaff }
+      }
+    } catch (err) {
+      return { success: false, message: err.message || 'Gagal mendaftar ke Supabase.' }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ==========================================
+  // REAL SUPABASE LOGIN
+  // Memeriksa password terenkripsi ke tabel 'staf_pengguna' di Supabase
+  // ==========================================
+  const login = async (identifier, password) => {
+    setLoading(true)
+    const client = initSupabaseClient()
+    const cleanId = (identifier || '').trim().toLowerCase()
+    const inputPassword = (password || '').trim()
+
+    try {
+      if (!cleanId) {
+        return { success: false, message: 'Harap masukkan Personal Number (PN) atau Email Anda.' }
+      }
+      if (!inputPassword) {
+        return { success: false, message: 'Harap masukkan password Anda.' }
+      }
+
+      if (client) {
+        // 1. Cek langsung ke tabel staf_pengguna di Supabase berdasarkan Email ATAU PN
         const { data, error } = await client
           .from('staf_pengguna')
           .select('*')
@@ -65,170 +175,171 @@ export function AuthProvider({ children }) {
           .limit(1)
 
         if (!error && data && data.length > 0) {
-          const found = data[0]
-          setUser(found)
-          return { success: true, user: found, source: 'supabase' }
+          const matched = data[0]
+
+          // Verifikasi password terenkripsi SHA-256 (dengan fallback plain text jika belum terenkripsi)
+          const isMatch = await verifyPassword(inputPassword, matched.password)
+          if (!isMatch) {
+            return { success: false, message: 'Password salah untuk akun staf ini.' }
+          }
+
+          setUser(matched)
+          return { success: true, user: matched, source: 'supabase_table' }
         }
-      } catch (err) {
-        console.warn('Supabase auth fallback:', err)
-      }
-    }
 
-    // 2. Fallback to local staff list
-    const found = users.find(
-      (u) =>
-        u.email.toLowerCase() === cleanId ||
-        u.pn.toLowerCase() === cleanId
-    )
-
-    if (found) {
-      setUser(found)
-
-      // Try background sync to Supabase if table is created
-      if (client) {
+        // 2. Cek juga ke Supabase Auth signInWithPassword jika didaftarkan via Auth
         try {
-          await client.from('staf_pengguna').upsert([found], { onConflict: 'id' })
-        } catch (e) {
-          // ignore background sync error
-        }
-      }
+          const { data: authData, error: authError } = await client.auth.signInWithPassword({
+            email: cleanId.includes('@') ? cleanId : `${cleanId}@bri.co.id`,
+            password: inputPassword
+          })
 
-      return { success: true, user: found, source: 'local' }
-    } else {
-      // Dynamic staff login for demo
-      const demoUser = {
-        id: `USR-${Date.now()}`,
-        nama: identifier.includes('@') ? identifier.split('@')[0] : `Staff PN ${identifier}`,
-        pn: identifier.includes('@') ? '00' + Math.floor(100000 + Math.random() * 900000) : identifier,
-        email: identifier.includes('@') ? identifier : `${identifier}@bri.co.id`,
-        jabatan: 'Staff Administrasi Kredit',
-        role: 'Staff',
-        unit: 'KCP Iskandar Palembang',
-        status: 'Aktif',
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-        telepon: '0812-7000-8800'
-      }
-      setUsers((prev) => [demoUser, ...prev])
-      setUser(demoUser)
-
-      if (client) {
-        try {
-          await client.from('staf_pengguna').insert([demoUser])
+          if (!authError && authData?.user) {
+            const meta = authData.user.user_metadata || {}
+            const authProfile = {
+              id: authData.user.id,
+              nama: meta.nama || authData.user.email?.split('@')[0],
+              pn: meta.pn || cleanId,
+              email: authData.user.email,
+              jabatan: meta.jabatan || 'Staff Administrasi Kredit',
+              role: meta.role || 'Staff',
+              unit: 'KCP Iskandar Palembang',
+              status: 'Aktif'
+            }
+            setUser(authProfile)
+            return { success: true, user: authProfile, source: 'supabase_auth' }
+          }
         } catch (e) {
           // ignore
         }
       }
 
-      return { success: true, user: demoUser, source: 'demo' }
+      // 3. Fallback akun staf lokal bawaan (jika offline)
+      const matchedLocal = users.find(
+        (u) =>
+          u.email.toLowerCase() === cleanId ||
+          u.pn.toLowerCase() === cleanId
+      )
+
+      if (matchedLocal) {
+        const isMatch = await verifyPassword(
+          inputPassword,
+          matchedLocal.password || '7462f61e6db735d2a8f2fbf18265e634d7483c18533ef994065cb65eb7ac6b8a'
+        )
+        if (!isMatch) {
+          return { success: false, message: 'Password salah untuk akun staf ini.' }
+        }
+        setUser(matchedLocal)
+        return { success: true, user: matchedLocal, source: 'local' }
+      }
+
+      return {
+        success: false,
+        message: 'Personal Number (PN) atau Email tidak terdaftar di sistem.'
+      }
+    } catch (err) {
+      return { success: false, message: err.message || 'Gagal login ke database.' }
+    } finally {
+      setLoading(false)
     }
   }
 
-  // Register handler connected to Supabase
-  const register = async (newUser) => {
-    const created = {
-      id: `USR-${Date.now()}`,
-      nama: newUser.nama,
-      pn: newUser.pn || '00' + Math.floor(100000 + Math.random() * 900000),
-      email: newUser.email,
-      jabatan: newUser.jabatan || 'Staff Administrasi Kredit',
-      role: newUser.role || 'Staff',
-      unit: 'KCP Iskandar Palembang',
-      status: 'Aktif',
-      avatar: newUser.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-      telepon: newUser.telepon || '-'
-    }
-
-    setUsers((prev) => [created, ...prev])
-    setUser(created)
-
+  // LOGOUT
+  const logout = async () => {
     const client = initSupabaseClient()
     if (client) {
       try {
-        await client.from('staf_pengguna').insert([created])
+        await client.auth.signOut()
+      } catch (e) {
+        console.warn('SignOut error:', e)
+      }
+    }
+    setUser(null)
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('bri_surat_current_user')
+      localStorage.removeItem('bri_surat_current_user')
+    }
+  }
+
+  // Tambah staf dari halaman /users langsung ke Supabase
+  const addUser = async (userData) => {
+    const client = initSupabaseClient()
+    const encryptedPassword = await hashPassword('123456')
+    const newStaff = {
+      id: `USR-${Date.now()}`,
+      nama: userData.nama.trim(),
+      pn: userData.pn.trim(),
+      email: userData.email.trim().toLowerCase(),
+      password: encryptedPassword,
+      jabatan: userData.jabatan,
+      role: userData.role || 'Staff',
+      unit: 'KCP Iskandar Palembang',
+      telepon: userData.telepon?.trim() || '-',
+      status: userData.status || 'Aktif',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
+    }
+
+    if (client) {
+      try {
+        await client.from('staf_pengguna').insert([newStaff])
       } catch (err) {
-        console.warn('Supabase register insert error:', err)
+        console.warn('Gagal insert staf_pengguna ke Supabase:', err)
       }
     }
 
-    return { success: true, user: created }
+    setUsers((prev) => [newStaff, ...prev])
+    return newStaff
   }
 
-  const logout = () => {
-    setUser(null)
-    localStorage.removeItem('bri_surat_current_user')
+  // Hapus staf dari Supabase
+  const deleteUser = async (userId) => {
+    const client = initSupabaseClient()
+    if (client) {
+      try {
+        await client.from('staf_pengguna').delete().eq('id', userId)
+      } catch (err) {
+        console.warn('Gagal delete staf_pengguna di Supabase:', err)
+      }
+    }
+    setUsers((prev) => prev.filter((u) => u.id !== userId))
   }
 
   const updateProfile = async (updatedData) => {
     const updatedUser = { ...user, ...updatedData }
     setUser(updatedUser)
-    setUsers((prev) =>
-      prev.map((u) => (u.id === user.id ? updatedUser : u))
-    )
 
     const client = initSupabaseClient()
     if (client) {
       try {
         await client.from('staf_pengguna').update(updatedData).eq('id', user.id)
-      } catch (e) {
-        console.warn('Supabase update profile error:', e)
+      } catch (err) {
+        console.warn('Update staf_pengguna error:', err)
       }
     }
 
     return { success: true }
   }
 
-  const addUser = async (userData) => {
-    const created = {
-      id: `USR-${Date.now()}`,
-      nama: userData.nama,
-      pn: userData.pn,
-      email: userData.email,
-      jabatan: userData.jabatan,
-      role: userData.role || 'Staff',
-      unit: 'KCP Iskandar Palembang',
-      status: userData.status || 'Aktif',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-      telepon: userData.telepon || '-'
-    }
-    setUsers((prev) => [created, ...prev])
-
-    const client = initSupabaseClient()
-    if (client) {
-      try {
-        await client.from('staf_pengguna').insert([created])
-      } catch (e) {
-        console.warn('Supabase insert user error:', e)
-      }
-    }
-
-    return created
-  }
-
-  const deleteUser = async (userId) => {
-    setUsers((prev) => prev.filter((u) => u.id !== userId))
-
-    const client = initSupabaseClient()
-    if (client) {
-      try {
-        await client.from('staf_pengguna').delete().eq('id', userId)
-      } catch (e) {
-        console.warn('Supabase delete user error:', e)
-      }
-    }
-  }
+  // Role permissions
+  const roleName = (user?.role || '').toLowerCase()
+  const isAdmin = roleName === 'admin' || roleName === 'supervisor'
+  const isStaff = !isAdmin
 
   return (
     <AuthContext.Provider
       value={{
         user,
         users,
+        loading,
+        isAdmin,
+        isStaff,
         login,
         register,
         logout,
         updateProfile,
         addUser,
         deleteUser,
-        supabaseReady
+        fetchUsersFromSupabase
       }}
     >
       {children}

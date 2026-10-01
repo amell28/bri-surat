@@ -1,24 +1,51 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Users,
   UserPlus,
   Search,
   Shield,
+  ShieldAlert,
   Briefcase,
   Mail,
   Phone,
   Trash2,
   CheckCircle,
   X,
-  Building2
+  Building2,
+  Lock
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 export default function UserList() {
-  const { users, user: currentUser, addUser, deleteUser } = useAuth()
+  const { users, user: currentUser, isAdmin, addUser, deleteUser } = useAuth()
+  const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState(null)
+
+  // Akses Guard: Jika bukan Admin, tampilkan peringatan pembatasan wewenang
+  if (!isAdmin) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-white rounded-3xl border border-slate-200 shadow-xs">
+        <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4">
+          <ShieldAlert className="w-8 h-8 text-[#FF7401]" />
+        </div>
+        <h2 className="text-xl font-extrabold text-slate-900">
+          Akses Khusus Admin Kredit
+        </h2>
+        <p className="text-xs text-slate-500 max-w-md mt-2 leading-relaxed">
+          Akun Anda memiliki hak akses <strong>Role Staff</strong>. Halaman Manajemen Staf & Pengguna hanya dapat diakses oleh Administrator Kredit atau Supervisor BRI KCP Iskandar Palembang.
+        </p>
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="mt-5 px-5 py-2.5 rounded-xl bg-[#014181] hover:bg-[#002d5b] text-white text-xs font-bold transition shadow-md shadow-[#014181]/20"
+        >
+          Kembali ke Dashboard
+        </button>
+      </div>
+    )
+  }
 
   const initialForm = {
     nama: '',
@@ -41,6 +68,7 @@ export default function UserList() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    if (!isAdmin) return
     if (!formData.nama.trim() || !formData.email.trim()) return
 
     addUser(formData)
@@ -49,6 +77,7 @@ export default function UserList() {
   }
 
   const handleDeleteConfirm = () => {
+    if (!isAdmin) return
     if (userToDelete) {
       deleteUser(userToDelete.id)
       setUserToDelete(null)
@@ -148,11 +177,20 @@ export default function UserList() {
               </div>
 
               <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center gap-1">
-                  <CheckCircle className="w-3 h-3" /> {item.status || 'Aktif'}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> {item.status || 'Aktif'}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                    item.role === 'Admin' || item.role === 'Supervisor'
+                      ? 'bg-blue-100 text-[#014181]'
+                      : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    {item.role || 'Staff'}
+                  </span>
+                </div>
 
-                {!isMe && (
+                {isAdmin && !isMe && (
                   <button
                     onClick={() => setUserToDelete(item)}
                     className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
@@ -254,6 +292,11 @@ export default function UserList() {
                   placeholder="0812-xxxx-xxxx"
                   className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200"
                 />
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 flex items-center gap-2">
+                <Lock className="w-4 h-4 text-[#014181] shrink-0" />
+                <span>Password awal staf: <strong>123456</strong> (otomatis dienkripsi SHA-256 di Supabase)</span>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">

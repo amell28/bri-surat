@@ -43,32 +43,6 @@ export default function SupabaseSyncModal({ isOpen, onClose }) {
 
   if (!isOpen) return null
 
-  const sqlCode = `-- Jalankan di SQL Editor Supabase:
-create table if not exists public.surat_debitur (
-  id text primary key,
-  nama text not null,
-  tahun text not null,
-  sp1 text default '-',
-  sp1_urgent boolean default false,
-  sp2 text default '-',
-  sp2_urgent boolean default false,
-  sp3 text default '-',
-  sp3_urgent boolean default false,
-  sp_default text default '-',
-  sp_default_urgent boolean default false,
-  lpj text default '-',
-  lpj_urgent boolean default false,
-  pk text default '-',
-  pk_urgent boolean default false,
-  status text default 'Lengkap / Normal',
-  catatan text,
-  created_at timestamp with time zone default timezone('utc'::text, now())
-);
-
-alter table public.surat_debitur enable row level security;
-drop policy if exists "Akses Staf" on public.surat_debitur;
-create policy "Akses Staf" on public.surat_debitur for all using (true) with check (true);`
-
   const handleCopySql = () => {
     navigator.clipboard.writeText(sqlCode)
     setCopied(true)
@@ -158,14 +132,6 @@ create policy "Akses Staf" on public.surat_debitur for all using (true) with che
                   <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                   <span>Tarik Data</span>
                 </button>
-                <button
-                  onClick={handleUploadAll}
-                  disabled={loading}
-                  className="px-3 py-1.5 rounded-xl bg-[#014181] text-white font-bold text-xs hover:bg-[#002d5b] shadow-xs flex items-center gap-1.5 transition"
-                >
-                  <CloudUpload className="w-3.5 h-3.5" />
-                  <span>Upload Dummy ke Supabase</span>
-                </button>
               </>
             )}
           </div>
@@ -250,30 +216,6 @@ create policy "Akses Staf" on public.surat_debitur for all using (true) with che
             </button>
           </div>
         </form>
-
-        {/* SQL Setup Helper */}
-        <div className="mt-6 pt-5 border-t border-slate-100">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#FF7401]" />
-              Query SQL untuk Supabase SQL Editor:
-            </span>
-            <button
-              onClick={handleCopySql}
-              className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
-            >
-              <Copy className="w-3 h-3" />
-              <span>{copied ? 'Tersalin!' : 'Salin SQL'}</span>
-            </button>
-          </div>
-          <p className="text-[11px] text-slate-500 mb-2">
-            Jika tabel <code>surat_debitur</code> belum dibuat di Supabase Anda, cukup salin kode di bawah ini lalu jalankan di menu <strong>SQL Editor</strong> di dashboard Supabase Anda:
-          </p>
-
-          <pre className="p-3 bg-slate-900 text-slate-100 rounded-xl text-[10px] leading-relaxed overflow-x-auto font-mono max-h-36">
-            {sqlCode}
-          </pre>
-        </div>
       </div>
     </div>
   )

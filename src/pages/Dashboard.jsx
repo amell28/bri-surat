@@ -23,7 +23,7 @@ import StatCard from '../components/StatCard'
 import SupabaseSyncModal from '../components/SupabaseSyncModal'
 
 export default function Dashboard() {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const { suratList, stats, exportToCsv, isConfigured, syncStatus } = useSurat()
   const navigate = useNavigate()
 
@@ -55,9 +55,12 @@ export default function Dashboard() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold text-blue-100 mb-3 border border-white/20">
               <span className="w-2 h-2 rounded-full bg-[#FF7401]"></span>
               <span>BRI Kantor Cabang Pembantu (KCP) Iskandar Palembang</span>
+              <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-[#FF7401] text-white">
+                Role: {user?.role || 'Staff'}
+              </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Selamat Bertugas, {user?.nama || 'Staf BRI'}! 👋
+              Selamat Bertugas, {user?.nama || 'Staf BRI'}! 
             </h1>
             <p className="mt-2 text-sm text-blue-100/90 leading-relaxed">
               Portal penelusuran cepat berkas SP 1, SP 2, SP 3, SP Default, LPJ, dan Perjanjian Kredit (PK). Membantu staf menemukan arsip debitur dalam hitungan detik.
@@ -79,13 +82,15 @@ export default function Dashboard() {
               <Download className="w-4 h-4" />
               <span>Unduh Rekap CSV</span>
             </button>
-            <button
-              onClick={() => setIsSupabaseModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white text-xs font-bold hover:scale-102 transition"
-            >
-              <Database className="w-4 h-4 text-emerald-300" />
-              <span>{isConfigured ? 'Supabase Terhubung' : 'Upload ke Supabase'}</span>
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setIsSupabaseModalOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white text-xs font-bold hover:scale-102 transition"
+              >
+                <Database className="w-4 h-4 text-emerald-300" />
+                <span>{isConfigured ? 'Supabase Terhubung' : 'Upload ke Supabase'}</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -106,7 +111,7 @@ export default function Dashboard() {
             </p>
           </div>
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-[#014181] border border-blue-200/60 self-start sm:self-auto">
-            ⚡ Instant Response
+             Instant Response
           </span>
         </div>
 

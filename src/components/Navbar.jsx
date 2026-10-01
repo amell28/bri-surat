@@ -17,7 +17,7 @@ import { useSurat } from '../context/SuratContext'
 import SupabaseSyncModal from './SupabaseSyncModal'
 
 export default function Navbar({ onMenuToggle }) {
-  const { user, logout } = useAuth()
+  const { user, isAdmin, logout } = useAuth()
   const { stats, suratList, isConfigured } = useSurat()
   const [showNotifications, setShowNotifications] = useState(false)
   const [showSupabaseModal, setShowSupabaseModal] = useState(false)
@@ -152,21 +152,23 @@ export default function Navbar({ onMenuToggle }) {
           )}
         </div>
 
-        {/* Supabase Status Chip / Trigger */}
-        <button
-          onClick={() => setShowSupabaseModal(true)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition shadow-2xs ${
-            isConfigured
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-              : 'bg-blue-50 text-[#014181] border border-blue-200 hover:bg-blue-100'
-          }`}
-          title="Sinkronisasi Database Supabase"
-        >
-          <Database className="w-3.5 h-3.5 text-[#014181]" />
-          <span className="hidden sm:inline">
-            {isConfigured ? 'Supabase Sync' : 'Konek Supabase'}
-          </span>
-        </button>
+        {/* Supabase Status Chip / Trigger (Khusus Admin) */}
+        {isAdmin && (
+          <button
+            onClick={() => setShowSupabaseModal(true)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition shadow-2xs ${
+              isConfigured
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                : 'bg-blue-50 text-[#014181] border border-blue-200 hover:bg-blue-100'
+            }`}
+            title="Sinkronisasi Database Supabase (Khusus Admin)"
+          >
+            <Database className="w-3.5 h-3.5 text-[#014181]" />
+            <span className="hidden sm:inline">
+              {isConfigured ? 'Supabase Sync' : 'Konek Supabase'}
+            </span>
+          </button>
+        )}
 
         {/* User Chip */}
         <div

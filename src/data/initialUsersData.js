@@ -1,4 +1,7 @@
 // Data pengguna staf & admin BRI KCP Iskandar Palembang
+// Password default '123456' tersimpan dalam format hash SHA-256 aman
+const DEFAULT_HASHED_PASSWORD = '7462f61e6db735d2a8f2fbf18265e634d7483c18533ef994065cb65eb7ac6b8a'
+
 export const initialUsersList = [
   {
     id: 'USR-001',
@@ -8,6 +11,7 @@ export const initialUsersList = [
     jabatan: 'Admin Kredit & Arsip',
     role: 'Admin',
     unit: 'KCP Iskandar Palembang',
+    password: DEFAULT_HASHED_PASSWORD,
     status: 'Aktif',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     telepon: '0812-7382-9901'
@@ -20,6 +24,7 @@ export const initialUsersList = [
     jabatan: 'Supervisor Bisnis & Kredit',
     role: 'Supervisor',
     unit: 'KCP Iskandar Palembang',
+    password: DEFAULT_HASHED_PASSWORD,
     status: 'Aktif',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     telepon: '0813-6490-1123'
@@ -32,6 +37,7 @@ export const initialUsersList = [
     jabatan: 'Mantri Unit / AO',
     role: 'Staff',
     unit: 'KCP Iskandar Palembang',
+    password: DEFAULT_HASHED_PASSWORD,
     status: 'Aktif',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
     telepon: '0821-8930-4412'
@@ -44,6 +50,7 @@ export const initialUsersList = [
     jabatan: 'Relationship Manager (RM)',
     role: 'Staff',
     unit: 'KCP Iskandar Palembang',
+    password: DEFAULT_HASHED_PASSWORD,
     status: 'Aktif',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
     telepon: '0812-4455-8899'
@@ -56,6 +63,7 @@ export const initialUsersList = [
     jabatan: 'Intern Staff Administrasi Kredit',
     role: 'Admin',
     unit: 'KCP Iskandar Palembang',
+    password: DEFAULT_HASHED_PASSWORD,
     status: 'Aktif',
     avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
     telepon: '0896-1234-5678'

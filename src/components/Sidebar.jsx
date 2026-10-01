@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
@@ -5,20 +6,32 @@ import {
   Users,
   UserCheck,
   LogOut,
-  Building2,
   FileClock,
   ShieldAlert,
-  Sparkles
+  X
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useSurat } from '../context/SuratContext'
 
 export default function Sidebar({ isOpen, setIsOpen }) {
-  const { user, logout } = useAuth()
+  const { user, isAdmin, logout } = useAuth()
   const { stats } = useSurat()
   const navigate = useNavigate()
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && showLogoutConfirm) {
+        setShowLogoutConfirm(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showLogoutConfirm])
 
   const handleLogout = () => {
+    setShowLogoutConfirm(false)
+    if (setIsOpen) setIsOpen(false)
     logout()
     navigate('/login')
   }
@@ -36,12 +49,16 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       icon: FileText,
       badge: stats.total
     },
-    {
-      to: '/users',
-      label: 'Manajemen Staf',
-      icon: Users,
-      badge: null
-    },
+    ...(isAdmin
+      ? [
+          {
+            to: '/users',
+            label: 'Manajemen Staf',
+            icon: Users,
+            badge: null
+          }
+        ]
+      : []),
     {
       to: '/profile',
       label: 'Profil Pengguna',
@@ -147,45 +164,99 @@ export default function Sidebar({ isOpen, setIsOpen }) {
           </div>
         </div>
 
-        {/* Project Intern Info Card */}
-        <div className="px-4 py-3 mx-4 mb-4 rounded-xl bg-gradient-to-r from-white/10 to-white/5 border border-white/10 text-xs">
-          <div className="flex items-center gap-2 mb-1 text-[#FF7401] font-semibold">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Tugas Akhir Magang</span>
-          </div>
-          <p className="text-blue-100 text-[11px] leading-relaxed">
-            Sistem Pencarian & Administrasi Surat Penagihan (SP 1, SP 2, SP 3, Default, LPJ, PK)
-          </p>
-        </div>
-
-        {/* User Footer Profile & Logout */}
+        {/* Footer Logout Button */}
         <div className="p-4 border-t border-white/10 bg-black/15">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <img
-                src={user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}
-                alt={user?.nama}
-                className="w-9 h-9 rounded-full object-cover ring-2 ring-[#FF7401]/60 shrink-0"
-              />
-              <div className="min-w-0 truncate">
-                <p className="text-xs font-semibold text-white truncate">
-                  {user?.nama || 'Staf BRI'}
-                </p>
-                <p className="text-[10px] text-blue-200/80 truncate">
-                  PN: {user?.pn || '-'}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
-              title="Logout"
-              className="p-2 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-red-600/90 text-blue-100 hover:text-white font-semibold text-xs tracking-wide transition-all duration-200 border border-white/10 shadow-xs group"
+          >
+            <LogOut className="w-4 h-4 text-blue-200 group-hover:text-white transition-colors" />
+            <span>Logout</span>
+          </button>
         </div>
       </aside>
+
+      {/* Modal Konfirmasi Logout */}
+      {showLogoutConfirm && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={() => setShowLogoutConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-100 relative overflow-hidden animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top decorative bar */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-red-500 via-[#FF7401] to-[#014181]" />
+
+            {/* Close button */}
+            <button
+              onClick={() => setShowLogoutConfirm(false)}
+              className="absolute top-3.5 right-3.5 p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+              aria-label="Tutup"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Warning / Logout Icon */}
+            <div className="mx-auto w-14 h-14 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mb-4 ring-8 ring-red-50/60 shadow-inner">
+              <LogOut className="w-7 h-7" />
+            </div>
+
+            {/* Title & Desc */}
+            <h3 className="text-lg font-black text-slate-900 mb-1.5">
+              Konfirmasi Logout
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed mb-4">
+              Apakah Anda yakin ingin keluar dari sistem Administrasi Surat <strong className="text-slate-700">BRI KCP Iskandar Palembang</strong>?
+            </p>
+
+            {/* Info Akun yang Sedang Aktif */}
+            {user && (
+              <div className="mb-5 p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-left flex items-center gap-2.5">
+                <img
+                  src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}
+                  alt={user.nama}
+                  className="w-8 h-8 rounded-full object-cover border border-slate-200 shrink-0"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-slate-800 truncate">
+                    {user.nama}
+                  </p>
+                  <p className="text-[10px] text-slate-500 truncate flex items-center gap-1.5">
+                    <span>PN: {user.pn || '-'}</span>
+                    <span>•</span>
+                    <span className={`px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase ${
+                      user.role === 'Admin' ? 'bg-[#FF7401]/15 text-[#FF7401]' : 'bg-[#014181]/15 text-[#014181]'
+                    }`}>
+                      {user.role || 'Staff'}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md shadow-red-600/25 transition cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Ya, Keluar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

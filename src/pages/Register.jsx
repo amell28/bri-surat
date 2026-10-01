@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { UserPlus, User, Mail, Briefcase, Lock, ArrowLeft, Building2 } from 'lucide-react'
+import { UserPlus, User, Mail, Briefcase, Lock, ArrowLeft, Building2, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 export default function Register() {
@@ -15,6 +15,7 @@ export default function Register() {
     password: '',
     telepon: ''
   })
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -22,25 +23,33 @@ export default function Register() {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
-    if (!formData.nama || !formData.email) {
+    if (!formData.nama.trim() || !formData.email.trim()) {
       setError('Harap lengkapi nama dan email.')
       return
     }
 
+    if (!formData.password || formData.password.length < 6) {
+      setError('Password minimal 6 karakter (standar keamanan Supabase).')
+      return
+    }
+
     setLoading(true)
-    setTimeout(() => {
-      const res = register(formData)
+    try {
+      const res = await register(formData)
       setLoading(false)
       if (res.success) {
         navigate('/dashboard')
       } else {
-        setError('Gagal mendaftar. Silakan coba kembali.')
+        setError(res.message || 'Gagal mendaftar. Silakan coba kembali.')
       }
-    }, 400)
+    } catch (err) {
+      setLoading(false)
+      setError('Terjadi kendala saat registrasi ke Supabase.')
+    }
   }
 
   return (
@@ -186,18 +195,31 @@ export default function Register() {
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Password
+                Password Akun (Minimal 6 Karakter) *
               </label>
               <div className="relative">
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Minimal 6 karakter"
-                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#014181]"
+                  placeholder="Masukkan password aman"
+                  className="w-full pl-9 pr-10 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#014181]"
+                  required
                 />
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
               </div>
             </div>
 
