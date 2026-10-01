@@ -14,13 +14,20 @@ export const getSupabaseConfig = () => {
   }
 }
 
+// Helper to clean URL (removes trailing slashes or /rest/v1 suffix if pasted)
+export const cleanSupabaseUrl = (rawUrl) => {
+  if (!rawUrl) return ''
+  return rawUrl.trim().replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '')
+}
+
 // Function to initialize client dynamically
 export const initSupabaseClient = (customUrl, customKey) => {
   const config = customUrl && customKey ? { url: customUrl, anonKey: customKey } : getSupabaseConfig()
+  const cleanedUrl = cleanSupabaseUrl(config.url)
   
-  if (config.url && config.anonKey) {
+  if (cleanedUrl && config.anonKey) {
     try {
-      return createClient(config.url, config.anonKey)
+      return createClient(cleanedUrl, config.anonKey)
     } catch (e) {
       console.error('Inisialisasi Supabase gagal:', e)
       return null

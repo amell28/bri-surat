@@ -3,7 +3,7 @@
 
 export const initialSuratList = [
   {
-    id: 'DUMMY-001',
+    id: 'SURAT-001',
     nama: 'Budi Santoso (UD Maju Jaya)',
     tahun: '2022',
     sp1: '19-May-22',
@@ -22,7 +22,7 @@ export const initialSuratList = [
     catatan: 'Nasabah telah menerima SP 2, janji bayar tanggal 25 bulan ini.'
   },
   {
-    id: 'DUMMY-002',
+    id: 'SURAT-002',
     nama: 'PT Sriwijaya Mandiri Sejahtera',
     tahun: '2022',
     sp1: '04-Apr-22',
@@ -41,7 +41,7 @@ export const initialSuratList = [
     catatan: 'Tahap SP 3, jadwal panggilan mediasi di kantor KCP Iskandar.'
   },
   {
-    id: 'DUMMY-003',
+    id: 'SURAT-003',
     nama: 'Ahmad Fauzi (Toko Sembako Berkah)',
     tahun: '2025',
     sp1: '04-Nov-25',
@@ -60,7 +60,7 @@ export const initialSuratList = [
     catatan: 'Status SP Default, dokumen fisik LPJ perlu verifikasi ulang di ordner arsip.'
   },
   {
-    id: 'DUMMY-004',
+    id: 'SURAT-004',
     nama: 'CV Musi Karya Gemilang',
     tahun: '2023',
     sp1: '06-Aug-23',
@@ -79,7 +79,7 @@ export const initialSuratList = [
     catatan: 'SP 3 terbit, debitur mengajukan permohonan keringanan bunga.'
   },
   {
-    id: 'DUMMY-005',
+    id: 'SURAT-005',
     nama: 'Siti Aminah (Kredit Mikro)',
     tahun: '2024',
     sp1: '01-Jul-24',
@@ -98,7 +98,7 @@ export const initialSuratList = [
     catatan: 'SP 1 terkirim via pos ekspedisi, debitur kooperatif.'
   },
   {
-    id: 'DUMMY-006',
+    id: 'SURAT-006',
     nama: 'Hendra Saputra (Bengkel Mandiri)',
     tahun: '2024',
     sp1: '08-May-24',
@@ -117,7 +117,7 @@ export const initialSuratList = [
     catatan: 'Penanganan lanjutan oleh Relationship Manager (RM).'
   },
   {
-    id: 'DUMMY-007',
+    id: 'SURAT-007',
     nama: 'CV Ampera Teknik Pratama',
     tahun: '2026',
     sp1: '04-Aug-26',
@@ -136,7 +136,7 @@ export const initialSuratList = [
     catatan: 'Surat peringatan pertama telah dicatat di buku agenda penagihan.'
   },
   {
-    id: 'DUMMY-008',
+    id: 'SURAT-008',
     nama: 'Rian Hidayat (Usaha Ritel)',
     tahun: '2020',
     sp1: '27-Nov-20',
@@ -155,7 +155,7 @@ export const initialSuratList = [
     catatan: 'Arsip lama tahun 2020, lembar fisik LPJ dan PK perlu pencarian manual di rak B.'
   },
   {
-    id: 'DUMMY-009',
+    id: 'SURAT-009',
     nama: 'Dewi Sartika (Konveksi Cantika)',
     tahun: '2026',
     sp1: '26-Feb-26',
@@ -174,7 +174,7 @@ export const initialSuratList = [
     catatan: 'SP 1 aktif, konfirmasi angsuran ke nomor debitur.'
   },
   {
-    id: 'DUMMY-010',
+    id: 'SURAT-010',
     nama: 'Agus Prasetyo (CV Hasil Bumi)',
     tahun: '2024',
     sp1: '02-Dec-24',
@@ -193,7 +193,7 @@ export const initialSuratList = [
     catatan: 'Status SP Default, proses penyerahan ke bagian recovery / lelang jaminan.'
   },
   {
-    id: 'DUMMY-011',
+    id: 'SURAT-011',
     nama: 'PT Palembang Niaga Mandiri',
     tahun: '2020',
     sp1: '27-Nov-20',
@@ -212,7 +212,7 @@ export const initialSuratList = [
     catatan: 'Dokumen legalitas PT dan jaminan lengkap di map bantex 2020.'
   },
   {
-    id: 'DUMMY-012',
+    id: 'SURAT-012',
     nama: 'Nurul Hidayati (Apotek Sehat)',
     tahun: '2025',
     sp1: '11-Apr-25',
@@ -231,7 +231,7 @@ export const initialSuratList = [
     catatan: 'PK perlu verifikasi klausul penjaminan fidusia.'
   },
   {
-    id: 'DUMMY-013',
+    id: 'SURAT-013',
     nama: 'CV Cahaya Ilir Pratama',
     tahun: '2020',
     sp1: '27-Jul-20',
@@ -250,7 +250,7 @@ export const initialSuratList = [
     catatan: 'SP 3 selesai, debitur telah menandatangani restrukturisasi kredit.'
   },
   {
-    id: 'DUMMY-014',
+    id: 'SURAT-014',
     nama: 'CV Berkah Usaha Bersama',
     tahun: '2023',
     sp1: '01-Feb-23',
@@ -269,7 +269,7 @@ export const initialSuratList = [
     catatan: 'Fasilitas kredit modal kerja CV, berkas LPJ dan PK perlu dicek di ruang arsip.'
   },
   {
-    id: 'DUMMY-015',
+    id: 'SURAT-015',
     nama: 'PT Andalas Sentosa Abadi',
     tahun: '2021',
     sp1: '18-Mar-21',
@@ -288,7 +288,7 @@ export const initialSuratList = [
     catatan: 'Berkas arsip kredit aman di lemari arsip KCP Iskandar.'
   },
   {
-    id: 'DUMMY-016',
+    id: 'SURAT-016',
     nama: 'Fajar Nugraha (UD Sumber Rejeki)',
     tahun: '2022',
     sp1: '01-Jul-22',
@@ -307,7 +307,7 @@ export const initialSuratList = [
     catatan: 'Perjanjian kredit memerlukan addendum perpanjangan jatuh tempo.'
   },
   {
-    id: 'DUMMY-017',
+    id: 'SURAT-017',
     nama: 'CV Harapan Bangsa Mandiri',
     tahun: '2026',
     sp1: '26-Feb-26',
@@ -326,7 +326,7 @@ export const initialSuratList = [
     catatan: 'Surat peringatan 1 disampaikan langsung oleh Mantri penanggung jawab.'
   },
   {
-    id: 'DUMMY-018',
+    id: 'SURAT-018',
     nama: 'Iwan Kusuma (Kios Elektronik)',
     tahun: '2023',
     sp1: '26-Feb-26',
@@ -345,7 +345,7 @@ export const initialSuratList = [
     catatan: 'Data surat telah terintegrasi dalam sistem administrasi.'
   },
   {
-    id: 'DUMMY-019',
+    id: 'SURAT-019',
     nama: 'CV Delta Samudera Indah',
     tahun: '2020',
     sp1: '27-Nov-20',
@@ -364,7 +364,7 @@ export const initialSuratList = [
     catatan: 'Berkas fisik LPJ belum ditemukan di bindex 2020.'
   },
   {
-    id: 'DUMMY-020',
+    id: 'SURAT-020',
     nama: 'CV Delta Samudera Indah (Fasilitas II)',
     tahun: '2022',
     sp1: '03-Nov-22',
@@ -383,7 +383,7 @@ export const initialSuratList = [
     catatan: 'Fasilitas kedua, dokumen PK perlu pembaharuan tanda tangan komisaris.'
   },
   {
-    id: 'DUMMY-021',
+    id: 'SURAT-021',
     nama: 'PT Surya Cipta Pratama',
     tahun: '2026',
     sp1: '-',
@@ -402,7 +402,7 @@ export const initialSuratList = [
     catatan: 'Pemberkasan baru masuk, belum ada keterlambatan maupun penerbitan SP.'
   },
   {
-    id: 'DUMMY-022',
+    id: 'SURAT-022',
     nama: 'PT Surya Cipta Pratama (Cabang)',
     tahun: '2026',
     sp1: '01-Dec-25',
@@ -421,7 +421,7 @@ export const initialSuratList = [
     catatan: 'Riwayat surat lengkap dari SP1 hingga SP3.'
   },
   {
-    id: 'DUMMY-023',
+    id: 'SURAT-023',
     nama: 'CV Tri Tunggal Gemilang',
     tahun: '2025',
     sp1: '11-Apr-25',
@@ -440,7 +440,7 @@ export const initialSuratList = [
     catatan: 'SP Default terbit, proses negosiasi pelunasan dipercepat.'
   },
   {
-    id: 'DUMMY-024',
+    id: 'SURAT-024',
     nama: 'CV Karya Nusantara Abadi',
     tahun: '2023',
     sp1: '06-Apr-23',
@@ -459,7 +459,7 @@ export const initialSuratList = [
     catatan: 'SP Default tercatat, jaminan sertifikat tanah dalam appraisal ulang.'
   },
   {
-    id: 'DUMMY-025',
+    id: 'SURAT-025',
     nama: 'CV Prima Mandiri Sejahtera',
     tahun: '2025',
     sp1: '11-Apr-25',
@@ -478,7 +478,7 @@ export const initialSuratList = [
     catatan: 'SP Default, lembar LPJ fisik masih belum ditandatangani supervisor.'
   },
   {
-    id: 'DUMMY-026',
+    id: 'SURAT-026',
     nama: 'CV Graha Palembang Indah',
     tahun: '2026',
     sp1: '26-Feb-26',
@@ -497,7 +497,7 @@ export const initialSuratList = [
     catatan: 'SP 1 terbit, LPJ butuh validasi kelengkapan foto agunan.'
   },
   {
-    id: 'DUMMY-027',
+    id: 'SURAT-027',
     nama: 'Bambang Kurniawan (Percetakan Digital)',
     tahun: '2023',
     sp1: '13-Jun-23',
@@ -516,7 +516,7 @@ export const initialSuratList = [
     catatan: 'SP 1 terarsip, pembayaran angsuran mulai berjalan normal.'
   },
   {
-    id: 'DUMMY-028',
+    id: 'SURAT-028',
     nama: 'CV Kreatif Multi Usaha',
     tahun: '2026',
     sp1: '26-Feb-26',
@@ -535,7 +535,7 @@ export const initialSuratList = [
     catatan: 'Monitoring rutin oleh tim mikro BRI KCP Iskandar.'
   },
   {
-    id: 'DUMMY-029',
+    id: 'SURAT-029',
     nama: 'Rina Maryani (Katering Berkah)',
     tahun: '2020',
     sp1: '27-Nov-20',
@@ -554,7 +554,7 @@ export const initialSuratList = [
     catatan: 'Arsip lama tahun 2020 telah dimigrasikan ke sistem digital.'
   },
   {
-    id: 'DUMMY-030',
+    id: 'SURAT-030',
     nama: 'Dian Anggraini (Toko Pakaian Cantik)',
     tahun: '2026',
     sp1: '02-Sep-26',
@@ -573,7 +573,7 @@ export const initialSuratList = [
     catatan: 'SP 1 dicatat di buku register ekspedisi KCP.'
   },
   {
-    id: 'DUMMY-031',
+    id: 'SURAT-031',
     nama: 'Eko Wahyudi (Distributor Sembako)',
     tahun: '2022',
     sp1: '12-Oct-22',
@@ -592,7 +592,7 @@ export const initialSuratList = [
     catatan: 'Berkas lengkap dan tersimpan aman di filing cabinet KCP.'
   },
   {
-    id: 'DUMMY-032',
+    id: 'SURAT-032',
     nama: 'Maya Indahsari (Toserba Barokah)',
     tahun: '2026',
     sp1: '31-Mar-26',
@@ -611,7 +611,7 @@ export const initialSuratList = [
     catatan: 'Surat peringatan pertama disampaikan resmi via kurir.'
   },
   {
-    id: 'DUMMY-033',
+    id: 'SURAT-033',
     nama: 'drh. Ridwan Hakim (Klinik Hewan Palembang)',
     tahun: '2024',
     sp1: '21-Feb-24',
@@ -630,7 +630,7 @@ export const initialSuratList = [
     catatan: 'SP 3 terbit, dokumen fisik LPJ masih proses pencarian di lemari arsip.'
   },
   {
-    id: 'DUMMY-034',
+    id: 'SURAT-034',
     nama: 'Yusuf Habibie (Kredit Modal Kerja)',
     tahun: '2022',
     sp1: '20-Dec-22',
@@ -649,7 +649,7 @@ export const initialSuratList = [
     catatan: 'Debitur telah datang ke kantor KCP Iskandar menindaklanjuti SP 3.'
   },
   {
-    id: 'DUMMY-035',
+    id: 'SURAT-035',
     nama: 'Ratna Sari (Katering & Bakery)',
     tahun: '2024',
     sp1: '01-Mar-24',

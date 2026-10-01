@@ -10,12 +10,13 @@ import {
 } from '../lib/supabase'
 
 const SuratContext = createContext(null)
-const STORAGE_KEY = 'bri_surat_dummy_data_v2'
+const STORAGE_KEY = 'bri_surat_data_v3'
 
 export function SuratProvider({ children }) {
   const [suratList, setSuratList] = useState(() => {
     // Clean up old legacy keys
     localStorage.removeItem('bri_surat_data')
+    localStorage.removeItem('bri_surat_dummy_data_v2')
 
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
@@ -182,7 +183,7 @@ export function SuratProvider({ children }) {
   const addSurat = async (newSurat) => {
     const item = {
       ...newSurat,
-      id: newSurat.id || `DUMMY-${String(Date.now()).slice(-4)}`,
+      id: newSurat.id || `SURAT-${String(Date.now()).slice(-4)}`,
       tahun: newSurat.tahun || new Date().getFullYear().toString(),
       sp1: newSurat.sp1 || '-',
       sp1Urgent: Boolean(newSurat.sp1Urgent),

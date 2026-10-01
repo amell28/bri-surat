@@ -1,17 +1,19 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { LogIn, Lock, Mail, Building2, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react'
+import { LogIn, Lock, Mail, Building2, ShieldCheck, ArrowRight, Sparkles, Database, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useSurat } from '../context/SuratContext'
 
 export default function Login() {
-  const { login, users } = useAuth()
+  const { login, users, supabaseReady } = useAuth()
+  const { isConfigured } = useSurat()
   const navigate = useNavigate()
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
@@ -21,21 +23,26 @@ export default function Login() {
     }
 
     setIsLoading(true)
-    setTimeout(() => {
-      const res = login(identifier, password)
+    try {
+      const res = await login(identifier, password)
       setIsLoading(false)
       if (res.success) {
         navigate('/dashboard')
       } else {
         setError('Gagal masuk. Periksa kembali NIP/PN atau Email Anda.')
       }
-    }, 400)
+    } catch (err) {
+      setIsLoading(false)
+      setError('Gagal menghubungkan ke database.')
+    }
   }
 
-  const handleQuickLogin = (userItem) => {
+  const handleQuickLogin = async (userItem) => {
     setIdentifier(userItem.email)
     setPassword('••••••••')
-    login(userItem.email, 'password')
+    setIsLoading(true)
+    await login(userItem.email, 'password')
+    setIsLoading(false)
     navigate('/dashboard')
   }
 
@@ -52,7 +59,7 @@ export default function Login() {
           <div className="absolute -bottom-16 -left-16 w-36 h-36 bg-[#FF7401]/10 rounded-full blur-2xl pointer-events-none"></div>
 
           {/* Header */}
-          <div className="text-center mb-8 relative">
+          <div className="text-center mb-6 relative">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#014181] to-[#0d5cb3] text-white shadow-lg shadow-[#014181]/30 mb-4">
               <span className="text-2xl font-black tracking-tight">BRI</span>
             </div>
@@ -65,6 +72,18 @@ export default function Login() {
             <p className="text-xs text-slate-500 mt-2">
               Kelola dan cari berkas SP 1, SP 2, SP 3, SP Default, LPJ, & PK dengan cepat
             </p>
+          </div>
+
+          {/* Supabase Connection Status Banner */}
+          <div className="mb-6 p-2.5 rounded-2xl bg-blue-50/70 border border-blue-100 flex items-center justify-between text-xs">
+            <span className="text-slate-600 font-semibold flex items-center gap-1.5">
+              <Database className="w-3.5 h-3.5 text-[#014181]" />
+              Database Server:
+            </span>
+            <span className="font-bold text-emerald-700 bg-white px-2.5 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1 text-[11px] shadow-2xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Supabase Connected
+            </span>
           </div>
 
           {error && (
@@ -119,7 +138,10 @@ export default function Login() {
               className="w-full mt-2 py-3 px-4 rounded-xl bg-gradient-to-r from-[#014181] to-[#0256ab] hover:from-[#002d5b] hover:to-[#014181] text-white font-semibold text-sm shadow-lg shadow-[#014181]/25 hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
             >
               {isLoading ? (
-                <span>Memproses...</span>
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  <span>Verifikasi ke Supabase...</span>
+                </span>
               ) : (
                 <>
                   <LogIn className="w-4 h-4" />
@@ -133,12 +155,13 @@ export default function Login() {
           <div className="mt-6 pt-5 border-t border-slate-100">
             <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2.5">
               <Sparkles className="w-3.5 h-3.5 text-[#FF7401]" />
-              <span>Akses Cepat Pengguna Demo:</span>
+              <span>Akses Cepat Pengguna Demo (1-Klik Masuk):</span>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => handleQuickLogin(users[4] || users[0])}
+                disabled={isLoading}
                 className="p-2 text-left rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 transition text-xs group"
               >
                 <p className="font-semibold text-slate-800 group-hover:text-[#014181] truncate">
@@ -150,6 +173,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => handleQuickLogin(users[0])}
+                disabled={isLoading}
                 className="p-2 text-left rounded-xl bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-200 transition text-xs group"
               >
                 <p className="font-semibold text-slate-800 group-hover:text-[#FF7401] truncate">

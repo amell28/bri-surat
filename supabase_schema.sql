@@ -1,9 +1,9 @@
 -- =========================================================================
--- SQL SCHEMA TABEL SURAT DEBITUR BRI KCP ISKANDAR PALEMBANG
--- Salin (copy) dan jalankan (run) seluruh perintah ini di SQL Editor Supabase Anda:
+-- SQL SCHEMA LENGKAP: TABEL SURAT & STAF PENGGUNA BRI KCP ISKANDAR
+-- Salin dan jalankan seluruh script ini di SQL Editor Supabase Anda:
 -- =========================================================================
 
--- 1. Buat Tabel surat_debitur
+-- 1. Tabel surat_debitur
 create table if not exists public.surat_debitur (
   id text primary key,
   nama text not null,
@@ -25,16 +25,38 @@ create table if not exists public.surat_debitur (
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
--- 2. Aktifkan Row Level Security (RLS)
+-- 2. Tabel staf_pengguna (Untuk Autentikasi Staf KCP)
+create table if not exists public.staf_pengguna (
+  id text primary key,
+  nama text not null,
+  pn text not null unique,
+  email text not null unique,
+  jabatan text,
+  role text default 'Staff',
+  unit text default 'KCP Iskandar Palembang',
+  password text default '123456',
+  status text default 'Aktif',
+  telepon text,
+  avatar text,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- 3. Aktifkan Row Level Security (RLS) & Buka Izin Akses
 alter table public.surat_debitur enable row level security;
+alter table public.staf_pengguna enable row level security;
 
--- 3. Beri Izin Akses Penuh (SELECT, INSERT, UPDATE, DELETE) untuk Publik / Anon Key (Khusus Demo Magang)
-drop policy if exists "Izin Akses Penuh untuk Staf KCP" on public.surat_debitur;
+drop policy if exists "Akses Staf KCP Surat" on public.surat_debitur;
+create policy "Akses Staf KCP Surat" on public.surat_debitur for all using (true) with check (true);
 
-create policy "Izin Akses Penuh untuk Staf KCP" 
-on public.surat_debitur 
-for all 
-using (true) 
-with check (true);
+drop policy if exists "Akses Staf KCP User" on public.staf_pengguna;
+create policy "Akses Staf KCP User" on public.staf_pengguna for all using (true) with check (true);
 
--- Selesai! Tabel siap digunakan oleh aplikasi web BRI KCP Iskandar.
+-- 4. Masukkan Akun Staf Standar KCP Iskandar ke Supabase
+insert into public.staf_pengguna (id, nama, pn, email, jabatan, role, unit, password, status, telepon, avatar)
+values 
+  ('USR-005', 'Mahasiswa Magang (Anda)', 'MAGANG-501', 'magang.iskandar@bri.co.id', 'Intern Staff Administrasi Kredit', 'Admin', 'KCP Iskandar Palembang', '123456', 'Aktif', '0896-1234-5678', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'),
+  ('USR-001', 'M. Rizky Pratama', '00192847', 'rizky.pratama@bri.co.id', 'Admin Kredit & Arsip', 'Admin', 'KCP Iskandar Palembang', '123456', 'Aktif', '0812-7382-9901', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'),
+  ('USR-002', 'Ahmad Fauzan, S.E.', '00154829', 'ahmad.fauzan@bri.co.id', 'Supervisor Bisnis & Kredit', 'Supervisor', 'KCP Iskandar Palembang', '123456', 'Aktif', '0813-6490-1123', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'),
+  ('USR-003', 'Siti Rahmawati', '00219483', 'siti.rahmawati@bri.co.id', 'Mantri Unit / AO', 'Staff', 'KCP Iskandar Palembang', '123456', 'Aktif', '0821-8930-4412', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'),
+  ('USR-004', 'Bambang Supriyadi', '00183742', 'bambang.supriyadi@bri.co.id', 'Relationship Manager (RM)', 'Staff', 'KCP Iskandar Palembang', '123456', 'Aktif', '0812-4455-8899', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150')
+on conflict (id) do nothing;
