@@ -76,9 +76,6 @@ export default function Login() {
             <p className="text-xs text-[#FF7401] font-semibold mt-1 tracking-wide uppercase">
               Sistem Arsip & Penelusuran Surat Debitur
             </p>
-            <p className="text-xs text-slate-500 mt-2">
-              Kelola dan cari berkas SP 1, SP 2, SP 3, SP Default, LPJ, & PK dengan cepat
-            </p>
           </div>
 
           {error && (
