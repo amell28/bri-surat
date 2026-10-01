@@ -16,6 +16,7 @@ import {
   Lock
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import Avatar from '../components/Avatar'
 
 export default function UserList() {
   const { users, user: currentUser, isAdmin, addUser, deleteUser } = useAuth()
@@ -143,10 +144,11 @@ export default function UserList() {
               )}
 
               <div className="flex items-center gap-3.5">
-                <img
-                  src={item.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}
-                  alt={item.nama}
-                  className="w-14 h-14 rounded-2xl object-cover ring-2 ring-slate-100 shadow-sm"
+                <Avatar
+                  src={item.avatar}
+                  name={item.nama}
+                  size="lg"
+                  className="w-14 h-14 rounded-2xl ring-2 ring-slate-100 shadow-sm"
                 />
                 <div className="min-w-0">
                   <h3 className="font-extrabold text-sm text-slate-900 truncate">

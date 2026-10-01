@@ -17,7 +17,11 @@ export function AuthProvider({ children }) {
       const activeSession = sessionStorage.getItem('bri_surat_current_user')
       if (activeSession) {
         try {
-          return JSON.parse(activeSession)
+          const parsed = JSON.parse(activeSession)
+          if (parsed?.avatar && parsed.avatar.includes('unsplash.com')) {
+            parsed.avatar = null
+          }
+          return parsed
         } catch (e) {
           return null
         }
@@ -88,7 +92,7 @@ export function AuthProvider({ children }) {
       unit: 'KCP Iskandar Palembang',
       telepon: formData.telepon?.trim() || '-',
       status: 'Aktif',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
+      avatar: formData.avatar || null
     }
 
     try {
@@ -276,7 +280,7 @@ export function AuthProvider({ children }) {
       unit: 'KCP Iskandar Palembang',
       telepon: userData.telepon?.trim() || '-',
       status: userData.status || 'Aktif',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
+      avatar: userData.avatar || null
     }
 
     if (client) {
@@ -308,8 +312,15 @@ export function AuthProvider({ children }) {
     const updatedUser = { ...user, ...updatedData }
     setUser(updatedUser)
 
+    setUsers((prev) =>
+      prev.map((u) => (u.id === user?.id ? { ...u, ...updatedData } : u))
+    )
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('bri_surat_current_user', JSON.stringify(updatedUser))
+    }
+
     const client = initSupabaseClient()
-    if (client) {
+    if (client && user?.id) {
       try {
         await client.from('staf_pengguna').update(updatedData).eq('id', user.id)
       } catch (err) {
@@ -317,7 +328,7 @@ export function AuthProvider({ children }) {
       }
     }
 
-    return { success: true }
+    return { success: true, user: updatedUser }
   }
 
   // Role permissions

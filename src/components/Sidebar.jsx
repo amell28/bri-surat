@@ -12,6 +12,8 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useSurat } from '../context/SuratContext'
+import briLogo from '../assets/BRI-Icon.png'
+import Avatar from './Avatar'
 
 export default function Sidebar({ isOpen, setIsOpen }) {
   const { user, isAdmin, logout } = useAuth()
@@ -85,10 +87,12 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         {/* Header / Brand */}
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-white shadow-md">
-              <span className="text-xl font-black tracking-tighter text-[#014181]">
-                BRI
-              </span>
+            <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-white p-1.5 shadow-md shrink-0">
+              <img
+                src={briLogo}
+                alt="Logo BRI"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
@@ -214,10 +218,11 @@ export default function Sidebar({ isOpen, setIsOpen }) {
             {/* Info Akun yang Sedang Aktif */}
             {user && (
               <div className="mb-5 p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-left flex items-center gap-2.5">
-                <img
-                  src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}
-                  alt={user.nama}
-                  className="w-8 h-8 rounded-full object-cover border border-slate-200 shrink-0"
+                <Avatar
+                  src={user?.avatar}
+                  name={user?.nama || 'Staf BRI'}
+                  size="sm"
+                  className="border border-slate-200 shrink-0"
                 />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-slate-800 truncate">

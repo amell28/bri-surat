@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { UserPlus, User, Mail, Briefcase, Lock, ArrowLeft, Building2, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import briLogo from '../assets/BRI-Icon.png'
 
 export default function Register() {
   const { register } = useAuth()
@@ -69,15 +70,17 @@ export default function Register() {
             >
               <ArrowLeft className="w-4 h-4" /> Kembali ke Login
             </Link>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-[#014181] text-white flex items-center justify-center font-black text-xl shadow-md">
-                BRI
-              </div>
+            <div className="flex items-center gap-3.5">
+              <img
+                src={briLogo}
+                alt="Logo BRI"
+                className="w-12 h-12 sm:w-14 sm:h-14 object-contain drop-shadow-sm shrink-0"
+              />
               <div>
                 <h1 className="text-xl font-extrabold text-slate-900">
                   Daftar Akun Staf Baru
                 </h1>
-                <p className="text-xs text-[#FF7401] font-semibold">
+                <p className="text-xs text-[#FF7401] font-bold">
                   BRI KCP Iskandar Palembang
                 </p>
               </div>

@@ -15,6 +15,7 @@ import {
 import { useAuth } from '../context/AuthContext'
 import { useSurat } from '../context/SuratContext'
 import SupabaseSyncModal from './SupabaseSyncModal'
+import Avatar from './Avatar'
 
 export default function Navbar({ onMenuToggle }) {
   const { user, isAdmin, logout } = useAuth()
@@ -175,10 +176,11 @@ export default function Navbar({ onMenuToggle }) {
           onClick={() => navigate('/profile')}
           className="flex items-center gap-2 pl-2 cursor-pointer hover:opacity-85 transition"
         >
-          <img
-            src={user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}
-            alt={user?.nama}
-            className="w-8 h-8 rounded-full object-cover border border-[#014181]/20 shadow-xs"
+          <Avatar
+            src={user?.avatar}
+            name={user?.nama || 'Staf BRI'}
+            size="sm"
+            className="border border-[#014181]/20 shadow-xs"
           />
           <div className="hidden sm:block text-left">
             <span className="block text-xs font-bold text-slate-800 leading-tight">

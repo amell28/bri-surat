@@ -9,6 +9,7 @@ import {
   EyeOff
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import briLogo from '../assets/BRI-Icon.png'
 
 export default function Login() {
   const { login } = useAuth()
@@ -62,8 +63,12 @@ export default function Login() {
 
           {/* Header */}
           <div className="text-center mb-7 relative">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#014181] to-[#0d5cb3] text-white shadow-lg shadow-[#014181]/30 mb-4">
-              <span className="text-2xl font-black tracking-tight">BRI</span>
+            <div className="inline-flex items-center justify-center mb-4">
+              <img
+                src={briLogo}
+                alt="Logo BRI"
+                className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-md hover:scale-105 transition-transform duration-200"
+              />
             </div>
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
               KCP Iskandar Palembang

@@ -13,7 +13,7 @@ export const initialUsersList = [
     unit: 'KCP Iskandar Palembang',
     password: DEFAULT_HASHED_PASSWORD,
     status: 'Aktif',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    avatar: null,
     telepon: '0812-7382-9901'
   },
   {
@@ -26,7 +26,7 @@ export const initialUsersList = [
     unit: 'KCP Iskandar Palembang',
     password: DEFAULT_HASHED_PASSWORD,
     status: 'Aktif',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    avatar: null,
     telepon: '0813-6490-1123'
   },
   {
@@ -39,7 +39,7 @@ export const initialUsersList = [
     unit: 'KCP Iskandar Palembang',
     password: DEFAULT_HASHED_PASSWORD,
     status: 'Aktif',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+    avatar: null,
     telepon: '0821-8930-4412'
   },
   {
@@ -52,7 +52,7 @@ export const initialUsersList = [
     unit: 'KCP Iskandar Palembang',
     password: DEFAULT_HASHED_PASSWORD,
     status: 'Aktif',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+    avatar: null,
     telepon: '0812-4455-8899'
   },
   {
@@ -65,7 +65,7 @@ export const initialUsersList = [
     unit: 'KCP Iskandar Palembang',
     password: DEFAULT_HASHED_PASSWORD,
     status: 'Aktif',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+    avatar: null,
     telepon: '0896-1234-5678'
   }
 ]
