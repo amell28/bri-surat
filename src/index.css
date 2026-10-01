@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bri-blue: #014181;
+  --color-bri-blue-dark: #002d5b;
+  --color-bri-blue-light: #0d5cb3;
+  --color-bri-blue-soft: #e8f0fe;
+  --color-bri-orange: #FF7401;
+  --color-bri-orange-dark: #e06500;
+  --color-bri-orange-light: #ff9133;
+  --color-bri-orange-soft: #fff4ec;
+}
+
+:root {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background-color: #f8fafc;
+  color: #1e293b;
+  min-height: 100vh;
+}
