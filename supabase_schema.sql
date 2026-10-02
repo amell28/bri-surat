@@ -3,7 +3,14 @@
 -- Salin dan jalankan seluruh script ini di SQL Editor Supabase Anda:
 -- =========================================================================
 
--- 1. Tabel surat_debitur
+-- JIKA TABEL SUDAH PERNAH DIBUAT SEBELUMNYA, JALANKAN MIGRATION INI TERLEBIH DAHULU:
+alter table public.surat_debitur 
+  add column if not exists lampiran jsonb default '[]'::jsonb,
+  add column if not exists riwayat_log jsonb default '[]'::jsonb,
+  add column if not exists updated_at timestamp with time zone default timezone('utc'::text, now()),
+  add column if not exists updated_by text default 'Staf BRI';
+
+-- 1. Tabel surat_debitur (Baru)
 create table if not exists public.surat_debitur (
   id text primary key,
   nama text not null,

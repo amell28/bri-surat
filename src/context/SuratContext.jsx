@@ -64,29 +64,50 @@ export function SuratProvider({ children }) {
     updated_by: row.updated_by || 'Staf BRI'
   })
 
-  // Denormalizer from app format to DB row
+  // Denormalizer from app format to DB row (Full schema with lampiran & audit)
   const toDbRow = (item) => ({
     id: item.id,
     nama: item.nama,
     tahun: item.tahun,
     sp1: item.sp1 || '-',
-    sp1_urgent: Boolean(item.sp1Urgent),
+    sp1_urgent: Boolean(item.sp1Urgent ?? item.sp1_urgent),
     sp2: item.sp2 || '-',
-    sp2_urgent: Boolean(item.sp2Urgent),
+    sp2_urgent: Boolean(item.sp2Urgent ?? item.sp2_urgent),
     sp3: item.sp3 || '-',
-    sp3_urgent: Boolean(item.sp3Urgent),
-    sp_default: item.spDefault || '-',
-    sp_default_urgent: Boolean(item.spDefaultUrgent),
+    sp3_urgent: Boolean(item.sp3Urgent ?? item.sp3_urgent),
+    sp_default: item.spDefault || item.sp_default || '-',
+    sp_default_urgent: Boolean(item.spDefaultUrgent ?? item.sp_default_urgent),
     lpj: item.lpj || '-',
-    lpj_urgent: Boolean(item.lpjUrgent),
+    lpj_urgent: Boolean(item.lpjUrgent ?? item.lpj_urgent),
     pk: item.pk || '-',
-    pk_urgent: Boolean(item.pkUrgent),
+    pk_urgent: Boolean(item.pkUrgent ?? item.pk_urgent),
     status: item.status || 'Lengkap / Normal',
     catatan: item.catatan || '',
     lampiran: item.lampiran || [],
     riwayat_log: item.riwayat_log || [],
     updated_at: item.updated_at || new Date().toISOString(),
     updated_by: item.updated_by || 'Staf BRI'
+  })
+
+  // Baseline denormalizer (Strictly compatible with original table columns if migration hasn't been run yet)
+  const toBaselineDbRow = (item) => ({
+    id: item.id,
+    nama: item.nama,
+    tahun: item.tahun,
+    sp1: item.sp1 || '-',
+    sp1_urgent: Boolean(item.sp1Urgent ?? item.sp1_urgent),
+    sp2: item.sp2 || '-',
+    sp2_urgent: Boolean(item.sp2Urgent ?? item.sp2_urgent),
+    sp3: item.sp3 || '-',
+    sp3_urgent: Boolean(item.sp3Urgent ?? item.sp3_urgent),
+    sp_default: item.spDefault || item.sp_default || '-',
+    sp_default_urgent: Boolean(item.spDefaultUrgent ?? item.sp_default_urgent),
+    lpj: item.lpj || '-',
+    lpj_urgent: Boolean(item.lpjUrgent ?? item.lpj_urgent),
+    pk: item.pk || '-',
+    pk_urgent: Boolean(item.pkUrgent ?? item.pk_urgent),
+    status: item.status || 'Lengkap / Normal',
+    catatan: item.catatan || ''
   })
 
   // Fetch data from Supabase
@@ -151,6 +172,22 @@ export function SuratProvider({ children }) {
         .select()
 
       if (error) {
+        console.warn('Upload all to Supabase error:', error.message)
+        // Fallback to baseline rows if extended columns (lampiran, riwayat_log, updated_at, updated_by) don't exist
+        if (
+          error.code === 'PGRST204' ||
+          (error.message && (error.message.includes('column') || error.message.includes('schema cache')))
+        ) {
+          const baselineRows = initialSuratList.map(toBaselineDbRow)
+          const { error: retryErr } = await client
+            .from('surat_debitur')
+            .upsert(baselineRows, { onConflict: 'id' })
+          if (!retryErr) {
+            await fetchFromSupabase()
+            setSupabaseMessage(`Sukses! ${baselineRows.length} data telah di-upload ke Supabase (skema baseline).`)
+            return { success: true, count: baselineRows.length }
+          }
+        }
         setSupabaseMessage(`Upload gagal: ${error.message}`)
         return { success: false, message: error.message }
       }
@@ -208,7 +245,7 @@ export function SuratProvider({ children }) {
 
     const item = {
       ...newSurat,
-      id: newSurat.id || `SURAT-${String(Date.now()).slice(-4)}`,
+      id: newSurat.id || `SURAT-${Date.now()}`,
       tahun: newSurat.tahun || new Date().getFullYear().toString(),
       sp1: newSurat.sp1 || '-',
       sp1Urgent: Boolean(newSurat.sp1Urgent),
@@ -235,9 +272,36 @@ export function SuratProvider({ children }) {
     const client = initSupabaseClient()
     if (client) {
       try {
-        await client.from('surat_debitur').insert([toDbRow(item)])
+        const fullRow = toDbRow(item)
+        const { error } = await client.from('surat_debitur').insert([fullRow])
+
+        if (error) {
+          console.warn('Supabase insert full row error:', error.message)
+          // Fallback if extended columns (lampiran, riwayat_log, updated_at, updated_by) don't exist in Supabase table
+          if (
+            error.code === 'PGRST204' ||
+            (error.message && (error.message.includes('column') || error.message.includes('schema cache')))
+          ) {
+            console.log('Retrying insert with baseline schema...')
+            const baselineRow = toBaselineDbRow(item)
+            const { error: retryErr } = await client.from('surat_debitur').insert([baselineRow])
+            if (retryErr) {
+              console.error('Supabase retry insert failed:', retryErr.message)
+              setSupabaseMessage(`Gagal simpan ke Supabase: ${retryErr.message}`)
+            } else {
+              console.log('Supabase insert succeeded via baseline fallback!')
+              setSupabaseMessage('Surat baru berhasil disimpan ke Supabase!')
+            }
+          } else {
+            console.error('Supabase insert failed:', error.message)
+            setSupabaseMessage(`Gagal simpan ke Supabase: ${error.message}`)
+          }
+        } else {
+          console.log('Supabase insert succeeded:', item.id)
+          setSupabaseMessage('Surat baru berhasil disimpan ke Supabase!')
+        }
       } catch (e) {
-        console.warn('Supabase insert failed', e)
+        console.error('Supabase insert exception:', e)
       }
     }
 
@@ -303,9 +367,31 @@ export function SuratProvider({ children }) {
     const client = initSupabaseClient()
     if (client) {
       try {
-        await client.from('surat_debitur').update(toDbRow({ ...payload, id })).eq('id', id)
+        const fullRow = toDbRow({ ...payload, id })
+        const { error } = await client.from('surat_debitur').update(fullRow).eq('id', id)
+        if (error) {
+          console.warn('Supabase update full row error:', error.message)
+          if (
+            error.code === 'PGRST204' ||
+            (error.message && (error.message.includes('column') || error.message.includes('schema cache')))
+          ) {
+            const baselineRow = toBaselineDbRow({ ...payload, id })
+            const { error: retryErr } = await client.from('surat_debitur').update(baselineRow).eq('id', id)
+            if (retryErr) {
+              console.error('Supabase retry update failed:', retryErr.message)
+              setSupabaseMessage(`Gagal update ke Supabase: ${retryErr.message}`)
+            } else {
+              console.log('Supabase update succeeded via baseline fallback!')
+              setSupabaseMessage('Surat berhasil diperbarui di Supabase!')
+            }
+          } else {
+            setSupabaseMessage(`Gagal update ke Supabase: ${error.message}`)
+          }
+        } else {
+          setSupabaseMessage('Surat berhasil diperbarui di Supabase!')
+        }
       } catch (e) {
-        console.warn('Supabase update failed', e)
+        console.warn('Supabase update exception:', e)
       }
     }
   }
@@ -365,7 +451,13 @@ export function SuratProvider({ children }) {
     const client = initSupabaseClient()
     if (client) {
       try {
-        await client.from('surat_debitur').delete().eq('id', id)
+        const { error } = await client.from('surat_debitur').delete().eq('id', id)
+        if (error) {
+          console.error('Supabase delete error:', error.message)
+          setSupabaseMessage(`Gagal menghapus dari Supabase: ${error.message}`)
+        } else {
+          setSupabaseMessage('Surat berhasil dihapus dari Supabase!')
+        }
       } catch (e) {
         console.warn('Supabase delete failed', e)
       }
