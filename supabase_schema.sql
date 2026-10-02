@@ -22,6 +22,10 @@ create table if not exists public.surat_debitur (
   pk_urgent boolean default false,
   status text default 'Lengkap / Normal',
   catatan text,
+  lampiran jsonb default '[]'::jsonb,
+  riwayat_log jsonb default '[]'::jsonb,
+  updated_at timestamp with time zone default timezone('utc'::text, now()),
+  updated_by text default 'Staf BRI',
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
@@ -62,3 +66,12 @@ values
   ('USR-003', 'Siti Rahmawati', '00219483', 'siti.rahmawati@bri.co.id', 'Mantri Unit / AO', 'Staff', 'KCP Iskandar Palembang', '7462f61e6db735d2a8f2fbf18265e634d7483c18533ef994065cb65eb7ac6b8a', 'Aktif', '0821-8930-4412', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'),
   ('USR-004', 'Bambang Supriyadi', '00183742', 'bambang.supriyadi@bri.co.id', 'Relationship Manager (RM)', 'Staff', 'KCP Iskandar Palembang', '7462f61e6db735d2a8f2fbf18265e634d7483c18533ef994065cb65eb7ac6b8a', 'Aktif', '0812-4455-8899', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150')
 on conflict (id) do nothing;
+
+-- 5. Bucket Supabase Storage untuk Berkas Fisik (PDF / Scan Dokumen)
+insert into storage.buckets (id, name, public) 
+values ('berkas_debitur', 'berkas_debitur', true) 
+on conflict (id) do nothing;
+
+drop policy if exists "Akses Berkas Debitur Public" on storage.objects;
+create policy "Akses Berkas Debitur Public" on storage.objects 
+for all using (bucket_id = 'berkas_debitur') with check (bucket_id = 'berkas_debitur');

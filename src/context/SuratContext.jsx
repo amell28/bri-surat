@@ -57,7 +57,11 @@ export function SuratProvider({ children }) {
     pk: row.pk || '-',
     pkUrgent: Boolean(row.pk_urgent ?? row.pkUrgent),
     status: row.status || 'Lengkap / Normal',
-    catatan: row.catatan || ''
+    catatan: row.catatan || '',
+    lampiran: Array.isArray(row.lampiran) ? row.lampiran : (typeof row.lampiran === 'string' ? JSON.parse(row.lampiran || '[]') : []),
+    riwayat_log: Array.isArray(row.riwayat_log) ? row.riwayat_log : (typeof row.riwayat_log === 'string' ? JSON.parse(row.riwayat_log || '[]') : []),
+    updated_at: row.updated_at || row.created_at || new Date().toISOString(),
+    updated_by: row.updated_by || 'Staf BRI'
   })
 
   // Denormalizer from app format to DB row
@@ -78,7 +82,11 @@ export function SuratProvider({ children }) {
     pk: item.pk || '-',
     pk_urgent: Boolean(item.pkUrgent),
     status: item.status || 'Lengkap / Normal',
-    catatan: item.catatan || ''
+    catatan: item.catatan || '',
+    lampiran: item.lampiran || [],
+    riwayat_log: item.riwayat_log || [],
+    updated_at: item.updated_at || new Date().toISOString(),
+    updated_by: item.updated_by || 'Staf BRI'
   })
 
   // Fetch data from Supabase
@@ -180,8 +188,24 @@ export function SuratProvider({ children }) {
     return 'Lengkap / Normal'
   }
 
-  // Create
-  const addSurat = async (newSurat) => {
+  // Create with Audit Log
+  const addSurat = async (newSurat, staffUser = null) => {
+    const nowIso = new Date().toISOString()
+    const staffName = staffUser?.nama || 'Petugas Administrasi'
+    const staffPn = staffUser?.pn || '-'
+
+    const initialLog = [
+      {
+        id: `LOG-${Date.now()}`,
+        timestamp: nowIso,
+        staf: staffName,
+        pn: staffPn,
+        aksi: 'Pendaftaran Berkas',
+        detail: 'Arsip surat debitur baru berhasil didaftarkan ke sistem.',
+        catatan: newSurat.catatan || '-'
+      }
+    ]
+
     const item = {
       ...newSurat,
       id: newSurat.id || `SURAT-${String(Date.now()).slice(-4)}`,
@@ -199,7 +223,11 @@ export function SuratProvider({ children }) {
       pk: newSurat.pk || `PK - ${newSurat.nama.toUpperCase()}`,
       pkUrgent: Boolean(newSurat.pkUrgent),
       status: calculateStatus(newSurat),
-      catatan: newSurat.catatan || 'Surat debitur baru didaftarkan.'
+      catatan: newSurat.catatan || 'Surat debitur baru didaftarkan.',
+      lampiran: newSurat.lampiran || [],
+      riwayat_log: newSurat.riwayat_log && newSurat.riwayat_log.length > 0 ? newSurat.riwayat_log : initialLog,
+      updated_at: nowIso,
+      updated_by: staffName
     }
 
     setSuratList((prev) => [item, ...prev])
@@ -216,12 +244,56 @@ export function SuratProvider({ children }) {
     return item
   }
 
-  // Update
-  const updateSurat = async (id, updatedFields) => {
+  // Update with Audit Log
+  const updateSurat = async (id, updatedFields, staffUser = null) => {
+    const existing = suratList.find((s) => s.id === id) || {}
+    const nowIso = new Date().toISOString()
+    const staffName = staffUser?.nama || 'Petugas Administrasi'
+    const staffPn = staffUser?.pn || '-'
+
     const updatedStatus = calculateStatus(updatedFields)
+
+    // Build human-friendly change summary for audit log
+    const changes = []
+    if (updatedFields.spDefault !== undefined && updatedFields.spDefault !== existing.spDefault) {
+      changes.push(`SP Default diubah ke "${updatedFields.spDefault}"`)
+    }
+    if (updatedFields.sp3 !== undefined && updatedFields.sp3 !== existing.sp3) {
+      changes.push(`SP 3 diubah ke "${updatedFields.sp3}"`)
+    }
+    if (updatedFields.sp2 !== undefined && updatedFields.sp2 !== existing.sp2) {
+      changes.push(`SP 2 diubah ke "${updatedFields.sp2}"`)
+    }
+    if (updatedFields.sp1 !== undefined && updatedFields.sp1 !== existing.sp1) {
+      changes.push(`SP 1 diubah ke "${updatedFields.sp1}"`)
+    }
+    if (updatedFields.catatan !== undefined && updatedFields.catatan !== existing.catatan) {
+      changes.push('Catatan penagihan diperbarui')
+    }
+    if (updatedFields.lampiran && updatedFields.lampiran.length !== (existing.lampiran || []).length) {
+      changes.push('Berkas fisik / scan dokumen diperbarui')
+    }
+
+    const logEntry = {
+      id: `LOG-${Date.now()}`,
+      timestamp: nowIso,
+      staf: staffName,
+      pn: staffPn,
+      aksi: updatedFields.actionType || (changes.length > 0 ? changes.join(', ') : 'Pembaruan Data Berkas'),
+      detail: updatedFields.detail || changes.join('; ') || 'Pembaruan data kelengkapan surat debitur.',
+      catatan: updatedFields.catatan || existing.catatan || ''
+    }
+
+    const currentLogs = Array.isArray(existing.riwayat_log) ? existing.riwayat_log : []
+    const newLogs = [logEntry, ...currentLogs]
+
     const payload = {
       ...updatedFields,
-      status: updatedFields.status || updatedStatus
+      status: updatedFields.status || updatedStatus,
+      lampiran: updatedFields.lampiran || existing.lampiran || [],
+      riwayat_log: newLogs,
+      updated_at: nowIso,
+      updated_by: staffName
     }
 
     setSuratList((prev) =>
@@ -236,6 +308,54 @@ export function SuratProvider({ children }) {
         console.warn('Supabase update failed', e)
       }
     }
+  }
+
+  // File Attachments
+  const addAttachment = async (suratId, attachmentData, staffUser = null) => {
+    const existing = suratList.find((s) => s.id === suratId)
+    if (!existing) return null
+
+    const newAttachment = {
+      id: `FILE-${Date.now()}`,
+      nama_file: attachmentData.fileName || attachmentData.name || 'Dokumen Scan',
+      url: attachmentData.url,
+      ukuran: attachmentData.fileSize || attachmentData.size || 0,
+      tipe: attachmentData.tipe || 'Dokumen Scan',
+      storageType: attachmentData.storageType || 'base64_data',
+      diupload_pada: new Date().toISOString(),
+      diupload_oleh: staffUser?.nama || 'Petugas Administrasi'
+    }
+
+    const updatedLampiran = [newAttachment, ...(existing.lampiran || [])]
+    await updateSurat(
+      suratId,
+      {
+        lampiran: updatedLampiran,
+        actionType: 'Upload Berkas Fisik',
+        detail: `Mengunggah berkas scan "${newAttachment.nama_file}" (${newAttachment.tipe})`
+      },
+      staffUser
+    )
+
+    return newAttachment
+  }
+
+  const deleteAttachment = async (suratId, attachmentId, staffUser = null) => {
+    const existing = suratList.find((s) => s.id === suratId)
+    if (!existing) return
+
+    const targetFile = (existing.lampiran || []).find((f) => f.id === attachmentId)
+    const updatedLampiran = (existing.lampiran || []).filter((f) => f.id !== attachmentId)
+
+    await updateSurat(
+      suratId,
+      {
+        lampiran: updatedLampiran,
+        actionType: 'Hapus Berkas Fisik',
+        detail: `Menghapus berkas lampiran "${targetFile?.nama_file || attachmentId}"`
+      },
+      staffUser
+    )
   }
 
   // Delete
@@ -338,6 +458,8 @@ export function SuratProvider({ children }) {
         deleteSurat,
         resetToExcelInitial,
         exportToCsv,
+        addAttachment,
+        deleteAttachment,
         fetchFromSupabase,
         uploadAllToSupabase,
         connectSupabase,
