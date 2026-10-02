@@ -105,11 +105,68 @@ export default function UserList() {
 
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#014181] hover:bg-[#002d5b] text-white text-xs font-bold shadow-md shadow-[#014181]/20 hover:scale-102 transition self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#014181] hover:bg-[#002d5b] text-white text-xs font-bold shadow-md shadow-[#014181]/20 hover:scale-105 active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
         >
           <UserPlus className="w-4 h-4" />
           <span>Tambah Staf Baru</span>
         </button>
+      </div>
+
+      {/* 4 Summary Stat Chips with Staggered Entrance */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 animate-slide-up-fade stagger-1">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-semibold text-slate-500">Total Akun</span>
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#014181] flex items-center justify-center">
+              <Users className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-slate-900">{users.length}</div>
+          <p className="text-[10px] text-slate-400 mt-0.5">Pegawai terdaftar</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 animate-slide-up-fade stagger-2">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-semibold text-slate-500">Administrator</span>
+            <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#FF7401] flex items-center justify-center">
+              <Shield className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-slate-900">
+            {users.filter(u => u.role === 'Admin' || u.role === 'Supervisor').length}
+          </div>
+          <p className="text-[10px] text-slate-400 mt-0.5">Akses wewenang penuh</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 animate-slide-up-fade stagger-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-semibold text-slate-500">Mantri & Staff</span>
+            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <Briefcase className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-slate-900">
+            {users.filter(u => u.role !== 'Admin' && u.role !== 'Supervisor').length}
+          </div>
+          <p className="text-[10px] text-slate-400 mt-0.5">Operasional kredit</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 animate-slide-up-fade stagger-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-semibold text-slate-500">Status Aktif</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <CheckCircle className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-emerald-600 flex items-center gap-1.5">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            {users.filter(u => (u.status || 'Aktif') === 'Aktif').length}
+          </div>
+          <p className="text-[10px] text-slate-400 mt-0.5">100% Siap melayani</p>
+        </div>
       </div>
 
       {/* Search Bar */}
@@ -124,20 +181,30 @@ export default function UserList() {
           />
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
         </div>
+        {searchTerm && (
+          <div className="mt-2 text-xs text-slate-500 pl-1">
+            Menampilkan <strong>{filteredUsers.length}</strong> dari total {users.length} pengguna
+          </div>
+        )}
       </div>
 
       {/* Users Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredUsers.map((item) => {
+        {filteredUsers.map((item, idx) => {
           const isMe = item.id === currentUser?.id
+          const staggerClass = `stagger-${(idx % 6) + 1}`
           return (
             <div
               key={item.id}
-              className={`bg-white rounded-3xl p-6 border transition-all duration-200 shadow-xs hover:shadow-md relative overflow-hidden ${isMe ? 'border-[#014181] ring-2 ring-[#014181]/20' : 'border-slate-200/80'
-                }`}
+              className={`group bg-white rounded-3xl p-6 border transition-all duration-300 shadow-xs hover:shadow-xl hover:-translate-y-1.5 relative overflow-hidden animate-slide-up-fade ${staggerClass} ${
+                isMe ? 'border-[#014181] ring-2 ring-[#014181]/20' : 'border-slate-200/80 hover:border-blue-200'
+              }`}
             >
+              {/* Animated bottom accent gradient bar */}
+              <div className="absolute bottom-0 left-0 h-1 w-0 group-hover:w-full bg-gradient-to-r from-[#014181] via-[#0d5cb3] to-[#FF7401] transition-all duration-500 ease-out" />
+
               {isMe && (
-                <div className="absolute top-4 right-4 px-2 py-0.5 rounded-full bg-[#014181] text-white text-[10px] font-bold">
+                <div className="absolute top-4 right-4 px-2 py-0.5 rounded-full bg-[#014181] text-white text-[10px] font-bold shadow-xs">
                   Akun Anda
                 </div>
               )}
@@ -147,10 +214,10 @@ export default function UserList() {
                   src={item.avatar}
                   name={item.nama}
                   size="lg"
-                  className="w-14 h-14 rounded-2xl ring-2 ring-slate-100 shadow-sm"
+                  className="w-14 h-14 rounded-2xl ring-2 ring-slate-100 group-hover:ring-[#014181]/30 group-hover:scale-105 transition-all duration-300 shadow-sm"
                 />
                 <div className="min-w-0">
-                  <h3 className="font-extrabold text-sm text-slate-900 truncate">
+                  <h3 className="font-extrabold text-sm text-slate-900 group-hover:text-[#014181] transition-colors truncate">
                     {item.nama}
                   </h3>
                   <p className="text-xs text-[#014181] font-semibold truncate">
@@ -163,29 +230,34 @@ export default function UserList() {
               </div>
 
               <div className="mt-5 space-y-2 text-xs text-slate-600 border-t border-slate-100 pt-4">
-                <div className="flex items-center gap-2">
-                  <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <div className="flex items-center gap-2 group-hover:text-slate-800 transition-colors">
+                  <Mail className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#014181] transition-colors shrink-0" />
                   <span className="truncate">{item.email}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <div className="flex items-center gap-2 group-hover:text-slate-800 transition-colors">
+                  <Phone className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#014181] transition-colors shrink-0" />
                   <span>{item.telepon || '-'}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span className="truncate">{item.unit}</span>
+                <div className="flex items-center gap-2 group-hover:text-slate-800 transition-colors">
+                  <Building2 className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#FF7401] transition-colors shrink-0" />
+                  <span className="truncate">{item.unit || 'KCP Iskandar'}</span>
                 </div>
               </div>
 
               <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center gap-1">
-                    <CheckCircle className="w-3 h-3" /> {item.status || 'Aktif'}
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center gap-1.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    {item.status || 'Aktif'}
                   </span>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${item.role === 'Admin' || item.role === 'Supervisor'
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                    item.role === 'Admin' || item.role === 'Supervisor'
                       ? 'bg-blue-100 text-[#014181]'
                       : 'bg-slate-100 text-slate-600'
-                    }`}>
+                  }`}>
                     {item.role || 'Staff'}
                   </span>
                 </div>
@@ -193,7 +265,7 @@ export default function UserList() {
                 {isAdmin && !isMe && (
                   <button
                     onClick={() => setUserToDelete(item)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:scale-110 active:scale-95 transition-all"
                     title="Hapus Pengguna"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -207,8 +279,8 @@ export default function UserList() {
 
       {/* Modal Tambah Staf */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs transition-opacity animate-slide-up-fade">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 animate-scale-in">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-base font-bold text-slate-900">
                 Tambah Akun Staf Baru
@@ -321,9 +393,9 @@ export default function UserList() {
 
       {/* Modal Delete */}
       {userToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 text-center">
-            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-slide-up-fade">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 text-center animate-scale-in">
+            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4 animate-bounce">
               <Trash2 className="w-6 h-6" />
             </div>
             <h3 className="text-base font-bold text-slate-900">
@@ -336,13 +408,13 @@ export default function UserList() {
             <div className="mt-6 flex items-center justify-center gap-2">
               <button
                 onClick={() => setUserToDelete(null)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition"
               >
                 Batal
               </button>
               <button
                 onClick={handleDeleteConfirm}
-                className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-md"
+                className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-md hover:scale-105 active:scale-95 transition-all"
               >
                 Ya, Hapus
               </button>

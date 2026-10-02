@@ -412,12 +412,15 @@ export default function SuratList() {
               {filteredSurat.length} Berkas
             </span>
           </div>
+          <p className="text-xs text-slate-500 mt-1">
+            Pengelolaan surat peringatan (SP 1-3, SP Default), LPJ, dan Perjanjian Kredit (PK)
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleOpenAdd}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#014181] hover:bg-[#002d5b] text-white text-xs font-bold shadow-md shadow-[#014181]/20 hover:scale-102 transition"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#014181] hover:bg-[#002d5b] text-white text-xs font-bold shadow-md shadow-[#014181]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Tambah Debitur / Surat</span>
@@ -426,7 +429,7 @@ export default function SuratList() {
           <button
             onClick={handleExportPdfRekap}
             disabled={isExportingPdf}
-            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs hover:scale-102 transition"
+            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
             title="Download Laporan Format PDF Resmi BRI KCP Iskandar"
           >
             {isExportingPdf ? (
@@ -439,7 +442,7 @@ export default function SuratList() {
 
           <button
             onClick={() => exportToCsv(filteredSurat)}
-            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs hover:scale-102 transition"
+            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
             title="Download file CSV / Excel"
           >
             <Download className="w-4 h-4 text-emerald-600" />
@@ -448,12 +451,69 @@ export default function SuratList() {
 
           <button
             onClick={handlePrint}
-            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs hover:scale-102 transition"
+            className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer"
             title="Cetak Laporan Surat"
           >
             <Printer className="w-4 h-4 text-slate-600" />
             <span className="hidden sm:inline">Cetak</span>
           </button>
+        </div>
+      </div>
+
+      {/* 4 Summary Stat Chips with Staggered Entrance */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 animate-slide-up-fade stagger-1">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-semibold text-slate-500">Total Arsip</span>
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#014181] flex items-center justify-center">
+              <FileText className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-slate-900">{suratList.length}</div>
+          <p className="text-[10px] text-slate-400 mt-0.5">Seluruh debitur tercatat</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 animate-slide-up-fade stagger-2">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-semibold text-slate-500">Surat Peringatan</span>
+            <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#FF7401] flex items-center justify-center">
+              <AlertCircle className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-[#FF7401]">
+            {stats.sp1Count + stats.sp2Count + stats.sp3Count}
+          </div>
+          <p className="text-[10px] text-slate-400 mt-0.5">SP 1, SP 2, & SP 3</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 animate-slide-up-fade stagger-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-semibold text-slate-500">SP Default</span>
+            <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-rose-600">
+            {stats.spDefaultCount}
+          </div>
+          <p className="text-[10px] text-slate-400 mt-0.5">Penanganan khusus / lelang</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 animate-slide-up-fade stagger-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-semibold text-slate-500">Perlu Tindak Lanjut</span>
+            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-amber-600 flex items-center gap-1.5">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+            </span>
+            {stats.urgentCount}
+          </div>
+          <p className="text-[10px] text-slate-400 mt-0.5">Tanda merah LPJ & PK</p>
         </div>
       </div>
 
@@ -521,7 +581,7 @@ export default function SuratList() {
           </span>
           <button
             onClick={() => { setSelectedYear('ALL'); setSelectedStatus('ALL'); setSearchTerm(''); }}
-            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${selectedYear === 'ALL' && selectedStatus === 'ALL' && !searchTerm
+            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ${selectedYear === 'ALL' && selectedStatus === 'ALL' && !searchTerm
                 ? 'bg-[#014181] text-white shadow-xs'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
@@ -530,7 +590,7 @@ export default function SuratList() {
           </button>
           <button
             onClick={() => setSelectedStatus('URGENT')}
-            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition flex items-center gap-1 ${selectedStatus === 'URGENT'
+            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 ${selectedStatus === 'URGENT'
                 ? 'bg-[#FF7401] text-white shadow-xs'
                 : 'bg-orange-50 text-[#FF7401] hover:bg-orange-100'
               }`}
@@ -540,7 +600,7 @@ export default function SuratList() {
           </button>
           <button
             onClick={() => setSelectedStatus('SP DEFAULT')}
-            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${selectedStatus === 'SP DEFAULT'
+            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ${selectedStatus === 'SP DEFAULT'
                 ? 'bg-rose-600 text-white shadow-xs'
                 : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
               }`}
@@ -549,8 +609,8 @@ export default function SuratList() {
           </button>
           <button
             onClick={() => setSelectedYear('2026')}
-            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${selectedYear === '2026'
-                ? 'bg-[#014181] text-white'
+            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ${selectedYear === '2026'
+                ? 'bg-[#014181] text-white shadow-xs'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
           >
@@ -558,8 +618,8 @@ export default function SuratList() {
           </button>
           <button
             onClick={() => setSelectedYear('2025')}
-            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${selectedYear === '2025'
-                ? 'bg-[#014181] text-white'
+            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ${selectedYear === '2025'
+                ? 'bg-[#014181] text-white shadow-xs'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
           >
@@ -595,7 +655,7 @@ export default function SuratList() {
                   return (
                     <tr
                       key={item.id || idx}
-                      className={`hover:bg-blue-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'
+                      className={`hover:bg-blue-50/70 hover:shadow-2xs transition-colors duration-150 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'
                         }`}
                     >
                       {/* NAMA */}
@@ -754,21 +814,21 @@ export default function SuratList() {
                         <div className="flex items-center justify-center gap-1">
                           <button
                             onClick={() => handleOpenDetail(item)}
-                            className="p-1.5 text-slate-500 hover:text-[#014181] hover:bg-blue-50 rounded-lg transition"
+                            className="p-1.5 text-slate-500 hover:text-[#014181] hover:bg-blue-50 hover:scale-115 active:scale-90 rounded-lg transition-all cursor-pointer"
                             title="Lihat Detail Lengkap"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleExportPdfDetail(item)}
-                            className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                            className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 hover:scale-115 active:scale-90 rounded-lg transition-all cursor-pointer"
                             title="Unduh Lembar Debitur (PDF)"
                           >
                             <FileDown className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleOpenEdit(item)}
-                            className="p-1.5 text-slate-500 hover:text-[#FF7401] hover:bg-orange-50 rounded-lg transition"
+                            className="p-1.5 text-slate-500 hover:text-[#FF7401] hover:bg-orange-50 hover:scale-115 active:scale-90 rounded-lg transition-all cursor-pointer"
                             title="Edit Data Surat"
                           >
                             <Edit className="w-4 h-4" />
@@ -776,7 +836,7 @@ export default function SuratList() {
                           {isAdmin && (
                             <button
                               onClick={() => setItemToDelete(item)}
-                              className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                              className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 hover:scale-115 active:scale-90 rounded-lg transition-all cursor-pointer"
                               title="Hapus Data Surat (Khusus Admin)"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -927,8 +987,8 @@ export default function SuratList() {
 
       {/* MODAL 1: Tambah Debitur & Surat Baru */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-slide-up-fade">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto animate-scale-in">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-xl bg-[#014181] text-white">
@@ -1225,8 +1285,8 @@ export default function SuratList() {
 
       {/* MODAL 2: Edit Debitur & Surat */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-slide-up-fade">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto animate-scale-in">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-xl bg-[#FF7401] text-white">
@@ -1577,8 +1637,8 @@ export default function SuratList() {
 
       {/* MODAL 3: Detail Debitur, Kronologi Surat, Berkas Fisik & Audit Trail */}
       {isDetailModalOpen && selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-2xl sm:max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[92vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-slide-up-fade">
+          <div className="bg-white rounded-3xl max-w-2xl sm:max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[92vh] flex flex-col animate-scale-in">
             {/* Modal Header */}
             <div className="flex items-start justify-between pb-4 border-b border-slate-100 gap-4 shrink-0">
               <div>
@@ -2013,9 +2073,9 @@ export default function SuratList() {
 
       {/* MODAL 4: Delete Confirmation */}
       {itemToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 text-center">
-            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-slide-up-fade">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 text-center animate-scale-in">
+            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4 animate-bounce">
               <Trash2 className="w-6 h-6" />
             </div>
             <h3 className="text-base font-bold text-slate-900">
@@ -2028,13 +2088,13 @@ export default function SuratList() {
             <div className="mt-6 flex items-center justify-center gap-2">
               <button
                 onClick={() => setItemToDelete(null)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition"
               >
                 Batal
               </button>
               <button
                 onClick={handleDeleteConfirm}
-                className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-md"
+                className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer"
               >
                 Ya, Hapus Data
               </button>
@@ -2045,8 +2105,8 @@ export default function SuratList() {
 
       {/* MODAL 5: Document Preview (PDF / Gambar) */}
       {previewFile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-6 shadow-2xl border border-slate-100 flex flex-col max-h-[95vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-slide-up-fade">
+          <div className="bg-white rounded-3xl max-w-4xl w-full p-5 sm:p-6 shadow-2xl border border-slate-100 flex flex-col max-h-[95vh] animate-scale-in">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 gap-3">
               <div className="flex items-center gap-2 overflow-hidden">
                 <div className="p-2 rounded-xl bg-blue-50 text-[#014181] shrink-0">
