@@ -33,12 +33,12 @@ export default function Dashboard() {
   // Quick search results on dashboard
   const quickResults = quickQuery.trim()
     ? suratList.filter(
-        (s) =>
-          s.nama.toLowerCase().includes(quickQuery.toLowerCase()) ||
-          s.tahun.includes(quickQuery) ||
-          (s.lpj && s.lpj.toLowerCase().includes(quickQuery.toLowerCase())) ||
-          (s.pk && s.pk.toLowerCase().includes(quickQuery.toLowerCase()))
-      ).slice(0, 6)
+      (s) =>
+        s.nama.toLowerCase().includes(quickQuery.toLowerCase()) ||
+        s.tahun.includes(quickQuery) ||
+        (s.lpj && s.lpj.toLowerCase().includes(quickQuery.toLowerCase())) ||
+        (s.pk && s.pk.toLowerCase().includes(quickQuery.toLowerCase()))
+    ).slice(0, 6)
     : []
 
   // Urgent and default items
@@ -60,7 +60,7 @@ export default function Dashboard() {
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Selamat Bertugas, {user?.nama || 'Staf BRI'}! 
+              Selamat Bertugas, {user?.nama || 'Staf BRI'}!
             </h1>
             <p className="mt-2 text-sm text-blue-100/90 leading-relaxed">
               Portal penelusuran cepat berkas SP 1, SP 2, SP 3, SP Default, LPJ, dan Perjanjian Kredit (PK). Membantu staf menemukan arsip debitur dalam hitungan detik.
@@ -111,7 +111,7 @@ export default function Dashboard() {
             </p>
           </div>
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-[#014181] border border-blue-200/60 self-start sm:self-auto">
-             Instant Response
+            Instant Response
           </span>
         </div>
 
@@ -153,13 +153,12 @@ export default function Dashboard() {
                         Tahun {item.tahun}
                       </span>
                       <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          item.status === 'SP DEFAULT'
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${item.status === 'SP DEFAULT'
                             ? 'bg-rose-100 text-rose-700'
                             : item.status.includes('SP 3')
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-blue-100 text-blue-800'
-                        }`}
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}
                       >
                         {item.status}
                       </span>

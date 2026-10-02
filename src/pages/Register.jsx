@@ -176,8 +176,8 @@ export default function Register() {
                   onChange={handleChange}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#014181]"
                 >
-                  <option value="Staff">Staff (Lihat & Cari Surat)</option>
-                  <option value="Admin">Admin (Kelola Penuh & Staf)</option>
+                  <option value="Staff">Staff </option>
+                  <option value="Admin">Admin </option>
                 </select>
               </div>
             </div>

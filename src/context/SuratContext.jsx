@@ -282,7 +282,7 @@ export function SuratProvider({ children }) {
   // Export to CSV
   const exportToCsv = (filteredData = suratList) => {
     const headers = ['ID', 'NAMA DEBITUR', 'TAHUN', 'SP 1', 'SP 2', 'SP 3', 'SP DEFAULT', 'LPJ', 'PERJANJIAN KREDIT', 'STATUS', 'CATATAN']
-    
+
     const rows = filteredData.map((s) => [
       `"${s.id || ''}"`,
       `"${s.nama || ''}"`,

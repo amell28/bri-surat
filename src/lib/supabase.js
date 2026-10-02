@@ -24,7 +24,7 @@ export const cleanSupabaseUrl = (rawUrl) => {
 export const initSupabaseClient = (customUrl, customKey) => {
   const config = customUrl && customKey ? { url: customUrl, anonKey: customKey } : getSupabaseConfig()
   const cleanedUrl = cleanSupabaseUrl(config.url)
-  
+
   if (cleanedUrl && config.anonKey) {
     try {
       return createClient(cleanedUrl, config.anonKey)

@@ -40,10 +40,10 @@ export default function SuratList() {
     searchParams.get('filter') === 'sp_default'
       ? 'SP DEFAULT'
       : searchParams.get('filter') === 'urgent'
-      ? 'URGENT'
-      : searchParams.get('filter') === 'sp'
-      ? 'SP'
-      : 'ALL'
+        ? 'URGENT'
+        : searchParams.get('filter') === 'sp'
+          ? 'SP'
+          : 'ALL'
   )
 
   // Keep query params synced if URL changes
@@ -202,10 +202,10 @@ export default function SuratList() {
     const finalData = isAdmin
       ? formData
       : {
-          ...formData,
-          nama: selectedItem.nama,
-          tahun: selectedItem.tahun
-        }
+        ...formData,
+        nama: selectedItem.nama,
+        tahun: selectedItem.tahun
+      }
 
     updateSurat(selectedItem.id, finalData)
     setIsEditModalOpen(false)
@@ -345,52 +345,47 @@ export default function SuratList() {
           </span>
           <button
             onClick={() => { setSelectedYear('ALL'); setSelectedStatus('ALL'); setSearchTerm(''); }}
-            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${
-              selectedYear === 'ALL' && selectedStatus === 'ALL' && !searchTerm
+            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${selectedYear === 'ALL' && selectedStatus === 'ALL' && !searchTerm
                 ? 'bg-[#014181] text-white shadow-xs'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
+              }`}
           >
             Semua ({suratList.length})
           </button>
           <button
             onClick={() => setSelectedStatus('URGENT')}
-            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition flex items-center gap-1 ${
-              selectedStatus === 'URGENT'
+            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition flex items-center gap-1 ${selectedStatus === 'URGENT'
                 ? 'bg-[#FF7401] text-white shadow-xs'
                 : 'bg-orange-50 text-[#FF7401] hover:bg-orange-100'
-            }`}
+              }`}
           >
             <AlertTriangle className="w-3 h-3" />
             Tindak Lanjut ({stats.urgentCount})
           </button>
           <button
             onClick={() => setSelectedStatus('SP DEFAULT')}
-            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${
-              selectedStatus === 'SP DEFAULT'
+            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${selectedStatus === 'SP DEFAULT'
                 ? 'bg-rose-600 text-white shadow-xs'
                 : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
-            }`}
+              }`}
           >
             SP Default ({stats.spDefaultCount})
           </button>
           <button
             onClick={() => setSelectedYear('2026')}
-            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${
-              selectedYear === '2026'
+            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${selectedYear === '2026'
                 ? 'bg-[#014181] text-white'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
+              }`}
           >
             Tahun 2026 ({stats.yearDistribution['2026'] || 0})
           </button>
           <button
             onClick={() => setSelectedYear('2025')}
-            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${
-              selectedYear === '2025'
+            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition ${selectedYear === '2025'
                 ? 'bg-[#014181] text-white'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
+              }`}
           >
             Tahun 2025 ({stats.yearDistribution['2025'] || 0})
           </button>
@@ -423,9 +418,8 @@ export default function SuratList() {
                   return (
                     <tr
                       key={item.id || idx}
-                      className={`hover:bg-blue-50/50 transition-colors ${
-                        idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'
-                      }`}
+                      className={`hover:bg-blue-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'
+                        }`}
                     >
                       {/* NAMA */}
                       <td className="py-3 px-4 font-bold text-slate-900 sticky left-0 z-10 bg-inherit whitespace-nowrap border-r border-slate-100">
@@ -448,11 +442,10 @@ export default function SuratList() {
                           <span className="text-slate-300">-</span>
                         ) : (
                           <span
-                            className={`font-semibold ${
-                              item.sp1Urgent
+                            className={`font-semibold ${item.sp1Urgent
                                 ? 'text-rose-600 font-bold px-2 py-0.5 rounded bg-rose-50 border border-rose-200'
                                 : 'text-slate-700'
-                            }`}
+                              }`}
                           >
                             {item.sp1}
                           </span>
@@ -465,11 +458,10 @@ export default function SuratList() {
                           <span className="text-slate-300">-</span>
                         ) : (
                           <span
-                            className={`font-semibold ${
-                              item.sp2Urgent
+                            className={`font-semibold ${item.sp2Urgent
                                 ? 'text-rose-600 font-bold px-2 py-0.5 rounded bg-rose-50 border border-rose-200'
                                 : 'text-slate-700'
-                            }`}
+                              }`}
                           >
                             {item.sp2}
                           </span>
@@ -482,11 +474,10 @@ export default function SuratList() {
                           <span className="text-slate-300">-</span>
                         ) : (
                           <span
-                            className={`font-semibold ${
-                              item.sp3Urgent
+                            className={`font-semibold ${item.sp3Urgent
                                 ? 'text-rose-600 font-bold px-2 py-0.5 rounded bg-rose-50 border border-rose-200'
                                 : 'text-slate-700'
-                            }`}
+                              }`}
                           >
                             {item.sp3}
                           </span>
@@ -507,11 +498,10 @@ export default function SuratList() {
                       {/* LPJ */}
                       <td className="py-3 px-4 whitespace-nowrap">
                         <span
-                          className={`underline decoration-dotted cursor-pointer transition ${
-                            item.lpjUrgent
+                          className={`underline decoration-dotted cursor-pointer transition ${item.lpjUrgent
                               ? 'text-rose-600 font-bold hover:text-rose-800'
                               : 'text-[#014181] hover:text-[#FF7401]'
-                          }`}
+                            }`}
                           onClick={() => handleOpenDetail(item)}
                           title="Klik untuk detail berkas LPJ"
                         >
@@ -522,11 +512,10 @@ export default function SuratList() {
                       {/* PK */}
                       <td className="py-3 px-4 whitespace-nowrap">
                         <span
-                          className={`underline decoration-dotted cursor-pointer transition ${
-                            item.pkUrgent
+                          className={`underline decoration-dotted cursor-pointer transition ${item.pkUrgent
                               ? 'text-rose-600 font-bold hover:text-rose-800'
                               : 'text-emerald-700 hover:text-[#014181]'
-                          }`}
+                            }`}
                           onClick={() => handleOpenDetail(item)}
                           title="Klik untuk detail Perjanjian Kredit"
                         >
@@ -537,17 +526,16 @@ export default function SuratList() {
                       {/* STATUS BADGE */}
                       <td className="py-3 px-3 text-center whitespace-nowrap">
                         <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold inline-block ${
-                            item.spDefault !== '-'
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold inline-block ${item.spDefault !== '-'
                               ? 'bg-rose-100 text-rose-800 border border-rose-200'
                               : item.sp3 !== '-'
-                              ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                              : item.sp2 !== '-'
-                              ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                              : item.sp1 !== '-'
-                              ? 'bg-cyan-100 text-cyan-800 border border-cyan-200'
-                              : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                          }`}
+                                ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                : item.sp2 !== '-'
+                                  ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                                  : item.sp1 !== '-'
+                                    ? 'bg-cyan-100 text-cyan-800 border border-cyan-200'
+                                    : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                            }`}
                         >
                           {item.status || 'Normal'}
                         </span>
@@ -687,11 +675,10 @@ export default function SuratList() {
                   <button
                     key={num}
                     onClick={() => handlePageChange(num)}
-                    className={`w-8 h-8 rounded-lg text-xs font-bold transition flex items-center justify-center ${
-                      currentPage === num
+                    className={`w-8 h-8 rounded-lg text-xs font-bold transition flex items-center justify-center ${currentPage === num
                         ? 'bg-[#014181] text-white shadow-xs'
                         : 'border border-slate-200 text-slate-700 hover:bg-slate-100'
-                    }`}
+                      }`}
                   >
                     {num}
                   </button>
@@ -992,11 +979,10 @@ export default function SuratList() {
                     disabled={!isAdmin}
                     value={formData.nama}
                     onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-                    className={`w-full px-3 py-2 text-xs rounded-xl border ${
-                      !isAdmin
+                    className={`w-full px-3 py-2 text-xs rounded-xl border ${!isAdmin
                         ? 'bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200'
                         : 'border-slate-200 bg-white'
-                    }`}
+                      }`}
                   />
                 </div>
 
@@ -1017,11 +1003,10 @@ export default function SuratList() {
                     disabled={!isAdmin}
                     value={formData.tahun}
                     onChange={(e) => setFormData({ ...formData, tahun: e.target.value })}
-                    className={`w-full px-3 py-2 text-xs rounded-xl border ${
-                      !isAdmin
+                    className={`w-full px-3 py-2 text-xs rounded-xl border ${!isAdmin
                         ? 'bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200'
                         : 'border-slate-200 bg-white'
-                    }`}
+                      }`}
                   />
                 </div>
               </div>

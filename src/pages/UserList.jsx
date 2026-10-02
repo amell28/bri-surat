@@ -133,9 +133,8 @@ export default function UserList() {
           return (
             <div
               key={item.id}
-              className={`bg-white rounded-3xl p-6 border transition-all duration-200 shadow-xs hover:shadow-md relative overflow-hidden ${
-                isMe ? 'border-[#014181] ring-2 ring-[#014181]/20' : 'border-slate-200/80'
-              }`}
+              className={`bg-white rounded-3xl p-6 border transition-all duration-200 shadow-xs hover:shadow-md relative overflow-hidden ${isMe ? 'border-[#014181] ring-2 ring-[#014181]/20' : 'border-slate-200/80'
+                }`}
             >
               {isMe && (
                 <div className="absolute top-4 right-4 px-2 py-0.5 rounded-full bg-[#014181] text-white text-[10px] font-bold">
@@ -183,11 +182,10 @@ export default function UserList() {
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center gap-1">
                     <CheckCircle className="w-3 h-3" /> {item.status || 'Aktif'}
                   </span>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-                    item.role === 'Admin' || item.role === 'Supervisor'
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${item.role === 'Admin' || item.role === 'Supervisor'
                       ? 'bg-blue-100 text-[#014181]'
                       : 'bg-slate-100 text-slate-600'
-                  }`}>
+                    }`}>
                     {item.role || 'Staff'}
                   </span>
                 </div>

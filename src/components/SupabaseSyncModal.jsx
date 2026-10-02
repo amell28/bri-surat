@@ -140,11 +140,10 @@ export default function SupabaseSyncModal({ isOpen, onClose }) {
         {/* Message Banner */}
         {(message || supabaseMessage) && (
           <div
-            className={`mt-4 p-3 rounded-xl border text-xs font-semibold flex items-center gap-2 ${
-              isSuccess
+            className={`mt-4 p-3 rounded-xl border text-xs font-semibold flex items-center gap-2 ${isSuccess
                 ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
                 : 'bg-amber-50 border-amber-200 text-amber-800'
-            }`}
+              }`}
           >
             {isSuccess ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
             <span>{message || supabaseMessage}</span>
