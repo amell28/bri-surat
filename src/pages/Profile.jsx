@@ -152,7 +152,7 @@ export default function Profile() {
                   title="Hapus foto profil dan gunakan inisial nama"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>Gunakan Inisial</span>
+                  <span>Hapus Profile</span>
                 </button>
               )}
             </div>

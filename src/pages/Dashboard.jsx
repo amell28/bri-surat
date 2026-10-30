@@ -133,10 +133,6 @@ export default function Dashboard() {
               Ketik nama debitur atau badan usaha (misal: "Budi Santoso", "Sriwijaya", "Ahmad Fauzi", "Ampera")
             </p>
           </div>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-[#014181] border border-blue-200/60 self-start sm:self-auto flex items-center gap-1.5 shadow-2xs">
-            <Sparkles className="w-3 h-3 text-[#FF7401]" />
-            Instant Response
-          </span>
         </div>
 
         <div className="relative">
