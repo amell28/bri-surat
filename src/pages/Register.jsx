@@ -236,7 +236,7 @@ export default function Register() {
               ) : (
                 <>
                   <UserPlus className="w-4 h-4" />
-                  <span>Daftar & Masuk ke Sistem</span>
+                  <span>Daftar</span>
                 </>
               )}
             </button>

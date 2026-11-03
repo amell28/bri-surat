@@ -52,7 +52,7 @@ export default function Navbar({ onMenuToggle }) {
 
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-[#014181] uppercase tracking-wider bg-blue-50 px-2 py-0.5 rounded border border-blue-200/60 hidden sm:inline-block">
+            <span className="text-xs font-bold text-[#014181] uppercase tracking-wider bg-blue-50 px-2 py-0.5 rounded border border-blue-200/60 hidden sm:inline-block whitespace-nowrap shrink-0">
               Unit Kerja
             </span>
             <h2 className="text-sm md:text-base font-bold text-slate-800 tracking-tight">
