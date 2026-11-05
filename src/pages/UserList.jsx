@@ -19,24 +19,35 @@ import { useAuth } from '../context/AuthContext'
 import Avatar from '../components/Avatar'
 
 export default function UserList() {
-  const { users, user: currentUser, isAdmin, addUser, deleteUser } = useAuth()
+  const { users, user: currentUser, isSisadmin, addUser, deleteUser } = useAuth()
   const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState(null)
 
-  // Akses Guard: Jika bukan Admin, tampilkan peringatan pembatasan wewenang
-  if (!isAdmin) {
+  const initialForm = {
+    nama: '',
+    pn: '',
+    email: '',
+    jabatan: 'Admin Kredit & Arsip',
+    role: 'Admin',
+    telepon: '',
+    status: 'Aktif'
+  }
+  const [formData, setFormData] = useState(initialForm)
+
+  // Akses Guard: Jika bukan Sisadmin, tampilkan peringatan pembatasan wewenang
+  if (!isSisadmin) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-white rounded-3xl border border-slate-200 shadow-xs">
         <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4">
           <ShieldAlert className="w-8 h-8 text-[#FF7401]" />
         </div>
         <h2 className="text-xl font-extrabold text-slate-900">
-          Akses Khusus Admin Kredit
+          Akses Khusus Sisadmin
         </h2>
         <p className="text-xs text-slate-500 max-w-md mt-2 leading-relaxed">
-          Akun Anda memiliki hak akses <strong>Role Staff</strong>. Halaman Manajemen Staf & Pengguna hanya dapat diakses oleh Administrator Kredit atau Supervisor BRI KCP Iskandar Palembang.
+          Akun Anda memiliki hak akses <strong>{currentUser?.role || 'Admin / User'}</strong>. Halaman Manajemen Pengguna hanya dapat diakses oleh Sisadmin BRI KCP Iskandar Palembang.
         </p>
         <button
           onClick={() => navigate('/dashboard')}
@@ -48,17 +59,6 @@ export default function UserList() {
     )
   }
 
-  const initialForm = {
-    nama: '',
-    pn: '',
-    email: '',
-    jabatan: 'Staff Administrasi Kredit',
-    role: 'Staff',
-    telepon: '',
-    status: 'Aktif'
-  }
-  const [formData, setFormData] = useState(initialForm)
-
   const filteredUsers = users.filter(
     (u) =>
       u.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -69,7 +69,7 @@ export default function UserList() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!isAdmin) return
+    if (!isSisadmin) return
     if (!formData.nama.trim() || !formData.email.trim()) return
 
     addUser(formData)
@@ -78,7 +78,7 @@ export default function UserList() {
   }
 
   const handleDeleteConfirm = () => {
-    if (!isAdmin) return
+    if (!isSisadmin) return
     if (userToDelete) {
       deleteUser(userToDelete.id)
       setUserToDelete(null)
@@ -127,26 +127,26 @@ export default function UserList() {
 
         <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 animate-slide-up-fade stagger-2">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-semibold text-slate-500">Administrator</span>
+            <span className="text-[11px] font-semibold text-slate-500">Sisadmin</span>
             <div className="w-8 h-8 rounded-xl bg-orange-50 text-[#FF7401] flex items-center justify-center">
               <Shield className="w-4 h-4" />
             </div>
           </div>
           <div className="text-xl sm:text-2xl font-black text-slate-900">
-            {users.filter(u => u.role === 'Admin' || u.role === 'Supervisor').length}
+            {users.filter(u => u.role === 'Sisadmin' || u.role === 'Supervisor').length}
           </div>
           <p className="text-[10px] text-slate-400 mt-0.5">Akses wewenang penuh</p>
         </div>
 
         <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 animate-slide-up-fade stagger-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-semibold text-slate-500">Mantri & Staff</span>
+            <span className="text-[11px] font-semibold text-slate-500">Admin & Pengguna</span>
             <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
               <Briefcase className="w-4 h-4" />
             </div>
           </div>
           <div className="text-xl sm:text-2xl font-black text-slate-900">
-            {users.filter(u => u.role !== 'Admin' && u.role !== 'Supervisor').length}
+            {users.filter(u => u.role !== 'Sisadmin' && u.role !== 'Supervisor').length}
           </div>
           <p className="text-[10px] text-slate-400 mt-0.5">Operasional kredit</p>
         </div>
@@ -254,19 +254,21 @@ export default function UserList() {
                     {item.status || 'Aktif'}
                   </span>
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-                    item.role === 'Admin' || item.role === 'Supervisor'
+                    item.role === 'Sisadmin' || item.role === 'Supervisor'
                       ? 'bg-blue-100 text-[#014181]'
-                      : 'bg-slate-100 text-slate-600'
+                      : item.role === 'User'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-amber-100 text-amber-800'
                   }`}>
-                    {item.role || 'Staff'}
+                    {item.role === 'User' ? 'User (Lihat Saja)' : item.role === 'Sisadmin' ? 'Sisadmin' : (item.role || 'Admin')}
                   </span>
                 </div>
 
-                {isAdmin && !isMe && (
+                {isSisadmin && !isMe && (
                   <button
                     onClick={() => setUserToDelete(item)}
                     className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:scale-110 active:scale-95 transition-all"
-                    title="Hapus Pengguna"
+                    title="Hapus Pengguna (Khusus Sisadmin)"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -277,13 +279,13 @@ export default function UserList() {
         })}
       </div>
 
-      {/* Modal Tambah Staf */}
+      {/* Modal Tambah Pengguna */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs transition-opacity animate-slide-up-fade">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity animate-slide-up-fade">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 animate-scale-in">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-base font-bold text-slate-900">
-                Tambah Akun Staf Baru
+                Tambah Akun Pengguna Baru
               </h3>
               <button
                 onClick={() => setIsAddModalOpen(false)}
@@ -345,11 +347,28 @@ export default function UserList() {
                   onChange={(e) => setFormData({ ...formData, jabatan: e.target.value })}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200"
                 >
-                  <option value="Staff Administrasi Kredit">Staff Administrasi Kredit</option>
+                  <option value="Admin Kredit & Arsip">Admin Kredit & Arsip</option>
                   <option value="Mantri Unit / AO">Mantri Unit / AO</option>
                   <option value="Relationship Manager (RM)">Relationship Manager (RM)</option>
                   <option value="Supervisor Bisnis & Kredit">Supervisor Bisnis & Kredit</option>
-                  <option value="Intern Staff (Magang)">Intern Staff (Magang)</option>
+                  <option value="Sistem Administrator (Sisadmin)">Sistem Administrator (Sisadmin)</option>
+                  <option value="Intern Sisadmin (Magang)">Intern Sisadmin (Magang)</option>
+                  <option value="Peninjau / Tamu">Peninjau / Tamu (View Only)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Role Hak Akses *
+                </label>
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200"
+                >
+                  <option value="Admin">Admin (Operasional - Input & Update Surat)</option>
+                  <option value="Sisadmin">Sisadmin (Akses Penuh Kelola Surat & Pengguna)</option>
+                  <option value="User">User (Hanya Melihat Data / Read-Only)</option>
                 </select>
               </div>
 

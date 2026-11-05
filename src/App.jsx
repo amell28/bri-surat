@@ -4,6 +4,7 @@ import { SuratProvider } from './context/SuratContext'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import SuratList from './pages/SuratList'
+import TindakLanjut from './pages/TindakLanjut'
 import UserList from './pages/UserList'
 import Profile from './pages/Profile'
 import Login from './pages/Login'
@@ -18,13 +19,13 @@ function ProtectedRoute({ children }) {
   return children
 }
 
-// Route Guard khusus Role Admin (Admin Kredit, Supervisor, Magang Admin)
-function AdminRoute({ children }) {
-  const { user, isAdmin } = useAuth()
+// Route Guard khusus Role Sisadmin (Kelola Akun Pengguna / Staf)
+function SisadminRoute({ children }) {
+  const { user, isSisadmin } = useAuth()
   if (!user) {
     return <Navigate to="/login" replace />
   }
-  if (!isAdmin) {
+  if (!isSisadmin) {
     return <Navigate to="/dashboard" replace />
   }
   return children
@@ -53,12 +54,13 @@ function AppRoutes() {
       >
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/surat" element={<SuratList />} />
+        <Route path="/tindak-lanjut" element={<TindakLanjut />} />
         <Route
           path="/users"
           element={
-            <AdminRoute>
+            <SisadminRoute>
               <UserList />
-            </AdminRoute>
+            </SisadminRoute>
           }
         />
         <Route path="/profile" element={<Profile />} />

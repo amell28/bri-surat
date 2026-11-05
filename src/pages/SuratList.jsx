@@ -1,25 +1,19 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useState, useMemo } from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import {
   Search,
   Plus,
   Filter,
   Download,
   Printer,
-  RotateCcw,
   Edit,
   Trash2,
   Eye,
   X,
-  Check,
   AlertCircle,
   AlertTriangle,
-  Calendar,
   FileText,
   FileCheck,
-  Building,
-  User,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -33,7 +27,8 @@ import {
   ShieldCheck,
   FileImage,
   Loader2,
-  File as FileIcon
+  CheckCircle2,
+  Bell
 } from 'lucide-react'
 import { useSurat } from '../context/SuratContext'
 import { useAuth } from '../context/AuthContext'
@@ -41,19 +36,19 @@ import { exportRekapToPdf, exportDebiturDetailToPdf } from '../lib/pdfGenerator'
 import { uploadBerkasFisik, formatFileSize } from '../lib/storageHelper'
 
 export default function SuratList() {
-  const { user, isAdmin, isStaff } = useAuth()
+  const { user, isSisadmin, canEdit } = useAuth()
+  const navigate = useNavigate()
   const {
     suratList,
     addSurat,
     updateSurat,
     deleteSurat,
-    resetToExcelInitial,
     exportToCsv,
     stats,
     addAttachment,
     deleteAttachment
   } = useSurat()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
 
   // State Filters
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '')
@@ -65,11 +60,15 @@ export default function SuratList() {
         ? 'URGENT'
         : searchParams.get('filter') === 'sp'
           ? 'SP'
-          : 'ALL'
+          : searchParams.get('filter') === 'lunas'
+            ? 'LUNAS'
+            : 'ALL'
   )
 
   // Keep query params synced if URL changes
-  useEffect(() => {
+  const [prevParams, setPrevParams] = useState(searchParams.toString())
+  if (searchParams.toString() !== prevParams) {
+    setPrevParams(searchParams.toString())
     const q = searchParams.get('q')
     if (q !== null) setSearchTerm(q)
 
@@ -77,13 +76,25 @@ export default function SuratList() {
     if (f === 'urgent') setSelectedStatus('URGENT')
     else if (f === 'sp_default') setSelectedStatus('SP DEFAULT')
     else if (f === 'sp') setSelectedStatus('SP')
-  }, [searchParams])
+    else if (f === 'lunas') setSelectedStatus('LUNAS')
+  }
 
   // Modals & Active Tab
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-  const [selectedItem, setSelectedItem] = useState(null)
+  const [selectedId, setSelectedId] = useState(null)
+  const [manualSelectedItem, setManualSelectedItem] = useState(null)
+  const selectedItem = useMemo(() => {
+    if (!selectedId && !manualSelectedItem) return null
+    return suratList.find((s) => s.id === selectedId) || manualSelectedItem
+  }, [suratList, selectedId, manualSelectedItem])
+
+  const setSelectedItem = (item) => {
+    setSelectedId(item?.id || null)
+    setManualSelectedItem(item || null)
+  }
+
   const [itemToDelete, setItemToDelete] = useState(null)
   const [detailTab, setDetailTab] = useState('ringkasan') // 'ringkasan' | 'lampiran' | 'audit'
 
@@ -112,19 +123,11 @@ export default function SuratList() {
     lpjUrgent: false,
     pk: '',
     pkUrgent: false,
-    catatan: ''
+    catatan: '',
+    statusAkhir: '',       // '' | 'Lunas' | 'Gugur'
+    tanggalStatusAkhir: '' // tanggal pelunasan/gugur
   }
   const [formData, setFormData] = useState(initialForm)
-
-  // Keep selectedItem synchronized with suratList (for realtime updates in modal)
-  useEffect(() => {
-    if (selectedItem) {
-      const current = suratList.find((s) => s.id === selectedItem.id)
-      if (current && JSON.stringify(current) !== JSON.stringify(selectedItem)) {
-        setSelectedItem(current)
-      }
-    }
-  }, [suratList, selectedItem])
 
   // Helper date formatter Indonesian WIB
   const formatDateWib = (isoString) => {
@@ -181,6 +184,17 @@ export default function SuratList() {
         matchesStatus = item.sp2 && item.sp2 !== '-'
       } else if (selectedStatus === 'SP 3') {
         matchesStatus = item.sp3 && item.sp3 !== '-'
+      } else if (selectedStatus === 'LUNAS') {
+        // Sudah ditandai statusAkhir (Lunas/Gugur) ATAU tidak ada SP aktif sama sekali
+        matchesStatus =
+          (item.statusAkhir && item.statusAkhir !== '') ||
+          (
+            (!item.sp1 || item.sp1 === '-') &&
+            (!item.sp2 || item.sp2 === '-') &&
+            (!item.sp3 || item.sp3 === '-') &&
+            (!item.spDefault || item.spDefault === '-') &&
+            !item.sp1Urgent && !item.sp3Urgent && !item.lpjUrgent && !item.pkUrgent && !item.spDefaultUrgent
+          )
       }
 
       return matchesSearch && matchesYear && matchesStatus
@@ -192,9 +206,12 @@ export default function SuratList() {
   const [pageSize, setPageSize] = useState(10)
 
   // Reset ke lembar pertama jika filter, pencarian, atau batas tampilan berubah
-  useEffect(() => {
+  const [prevFilterKey, setPrevFilterKey] = useState('')
+  const currentFilterKey = `${searchTerm}|${selectedYear}|${selectedStatus}|${pageSize}`
+  if (currentFilterKey !== prevFilterKey) {
+    setPrevFilterKey(currentFilterKey)
     setCurrentPage(1)
-  }, [searchTerm, selectedYear, selectedStatus, pageSize])
+  }
 
   const totalItems = filteredSurat.length
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
@@ -230,6 +247,10 @@ export default function SuratList() {
 
   // Handle Add Form
   const handleOpenAdd = () => {
+    if (!canEdit) {
+      alert('Akses Ditolak: Akun Anda memiliki Role User (Hanya Melihat). Anda tidak dapat menambah debitur/surat.')
+      return
+    }
     setFormData(initialForm)
     setNewAttachments([])
     setIsAddModalOpen(true)
@@ -237,6 +258,7 @@ export default function SuratList() {
 
   const handleAddSubmit = async (e) => {
     e.preventDefault()
+    if (!canEdit) return
     if (!formData.nama.trim()) return
 
     const payload = {
@@ -254,6 +276,10 @@ export default function SuratList() {
 
   // Handle Edit Form
   const handleOpenEdit = (item) => {
+    if (!canEdit) {
+      alert('Akses Ditolak: Akun Anda memiliki Role User (Hanya Melihat). Anda tidak dapat mengubah data surat.')
+      return
+    }
     setSelectedItem(item)
     setFormData({ ...item })
     setIsEditModalOpen(true)
@@ -261,10 +287,10 @@ export default function SuratList() {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault()
-    if (!selectedItem) return
+    if (!canEdit || !selectedItem) return
 
-    // Jika Role Staff, pertahankan nama dan tahun asli agar tidak terubah
-    const finalData = isAdmin
+    // Jika Role Admin (operasional), pertahankan nama dan tahun asli agar tidak terubah (hanya Sisadmin yang dapat mengubah identitas pokok)
+    const finalData = isSisadmin
       ? formData
       : {
         ...formData,
@@ -285,10 +311,10 @@ export default function SuratList() {
     setIsDetailModalOpen(true)
   }
 
-  // Handle Delete Confirmation (Hanya Admin yang berwenang)
+  // Handle Delete Confirmation (Hanya Sisadmin yang berwenang)
   const handleDeleteConfirm = async () => {
-    if (!isAdmin) {
-      alert('Akses Ditolak: Anda berstatus Role Staff. Penghapusan arsip surat hanya dapat dilakukan oleh Admin Kredit.')
+    if (!isSisadmin) {
+      alert('Akses Ditolak: Anda berstatus Role Admin. Penghapusan arsip surat hanya dapat dilakukan oleh Sisadmin.')
       setItemToDelete(null)
       return
     }
@@ -418,13 +444,15 @@ export default function SuratList() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={handleOpenAdd}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#014181] hover:bg-[#002d5b] text-white text-xs font-bold shadow-md shadow-[#014181]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Tambah Debitur / Surat</span>
-          </button>
+          {canEdit && (
+            <button
+              onClick={handleOpenAdd}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#014181] hover:bg-[#002d5b] text-white text-xs font-bold shadow-md shadow-[#014181]/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Tambah Debitur / Surat</span>
+            </button>
+          )}
 
           <button
             onClick={handleExportPdfRekap}
@@ -517,6 +545,68 @@ export default function SuratList() {
         </div>
       </div>
 
+      {/* Stat Chip Lunas/Gugur */}
+      <div
+        onClick={() => setSelectedStatus('LUNAS')}
+        className="cursor-pointer bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-4 flex items-center justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 animate-slide-up-fade"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shadow-md">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-emerald-900">Debitur Lunas / Gugur</p>
+            <p className="text-[10px] text-emerald-700">Tanpa SP aktif — tidak ada peringatan kredit macet</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-2xl font-black text-emerald-700">{stats.lunasCount}</div>
+          <p className="text-[10px] text-emerald-600 font-semibold">Debitur selesai</p>
+        </div>
+      </div>
+
+      {/* Mini-banner eskalasi SP — link ke halaman Tindak Lanjut */}
+      {((stats.sp1NeedsSP2?.length > 0) || (stats.sp2NeedsSP3?.length > 0) || (stats.sp3NeedsDefault?.length > 0)) && (
+        <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-amber-50 border border-amber-200 animate-slide-up-fade">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="relative shrink-0">
+              <Bell className="w-4 h-4 text-[#FF7401]" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500 animate-ping opacity-75" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-xs font-bold text-amber-900">
+                {(stats.sp1NeedsSP2?.length || 0) + (stats.sp2NeedsSP3?.length || 0) + (stats.sp3NeedsDefault?.length || 0)} debitur perlu eskalasi surat peringatan
+              </span>
+              <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                {stats.sp1NeedsSP2?.length > 0 && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-semibold border border-amber-200">
+                    SP1→SP2: {stats.sp1NeedsSP2.length}
+                  </span>
+                )}
+                {stats.sp2NeedsSP3?.length > 0 && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-semibold border border-orange-200">
+                    SP2→SP3: {stats.sp2NeedsSP3.length}
+                  </span>
+                )}
+                {stats.sp3NeedsDefault?.length > 0 && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-800 font-semibold border border-rose-200">
+                    SP3→Default: {stats.sp3NeedsDefault.length}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/tindak-lanjut')}
+            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FF7401] hover:bg-[#e06500] text-white text-xs font-bold transition-all hover:scale-105 active:scale-95 shadow-sm"
+          >
+            Lihat Detail
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Filter & Live Search Toolbar */}
       <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
@@ -570,6 +660,7 @@ export default function SuratList() {
               <option value="SP 1">SP 1 Saja</option>
               <option value="SP 2">SP 2</option>
               <option value="SP 3">SP 3</option>
+              <option value="LUNAS">Lunas / Gugur (Tanpa SP Aktif)</option>
             </select>
           </div>
         </div>
@@ -624,6 +715,16 @@ export default function SuratList() {
               }`}
           >
             Tahun 2025 ({stats.yearDistribution['2025'] || 0})
+          </button>
+          <button
+            onClick={() => setSelectedStatus('LUNAS')}
+            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 ${selectedStatus === 'LUNAS'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+              }`}
+          >
+            <CheckCircle2 className="w-3 h-3" />
+            Lunas / Gugur ({stats.lunasCount})
           </button>
         </div>
       </div>
@@ -793,20 +894,27 @@ export default function SuratList() {
 
                       {/* STATUS BADGE */}
                       <td className="py-3 px-3 text-center whitespace-nowrap">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold inline-block ${item.spDefault !== '-'
-                              ? 'bg-rose-100 text-rose-800 border border-rose-200'
-                              : item.sp3 !== '-'
-                                ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                                : item.sp2 !== '-'
-                                  ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                                  : item.sp1 !== '-'
-                                    ? 'bg-cyan-100 text-cyan-800 border border-cyan-200'
-                                    : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                            }`}
-                        >
-                          {item.status || 'Normal'}
-                        </span>
+                        {item.statusAkhir ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1 border bg-emerald-100 text-emerald-800 border-emerald-300">
+                            ✅ Lunas / Gugur
+                            {item.tanggalStatusAkhir && <span className="font-normal opacity-70">· {item.tanggalStatusAkhir}</span>}
+                          </span>
+                        ) : (
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold inline-block ${item.spDefault !== '-'
+                                ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                                : item.sp3 !== '-'
+                                  ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                  : item.sp2 !== '-'
+                                    ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                                    : item.sp1 !== '-'
+                                      ? 'bg-cyan-100 text-cyan-800 border border-cyan-200'
+                                      : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                              }`}
+                          >
+                            {item.status || 'Normal'}
+                          </span>
+                        )}
                       </td>
 
                       {/* ACTIONS */}
@@ -826,18 +934,20 @@ export default function SuratList() {
                           >
                             <FileDown className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => handleOpenEdit(item)}
-                            className="p-1.5 text-slate-500 hover:text-[#FF7401] hover:bg-orange-50 hover:scale-115 active:scale-90 rounded-lg transition-all cursor-pointer"
-                            title="Edit Data Surat"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          {isAdmin && (
+                          {canEdit && (
+                            <button
+                              onClick={() => handleOpenEdit(item)}
+                              className="p-1.5 text-slate-500 hover:text-[#FF7401] hover:bg-orange-50 hover:scale-115 active:scale-90 rounded-lg transition-all cursor-pointer"
+                              title="Edit Data Surat"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          )}
+                          {isSisadmin && (
                             <button
                               onClick={() => setItemToDelete(item)}
                               className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 hover:scale-115 active:scale-90 rounded-lg transition-all cursor-pointer"
-                              title="Hapus Data Surat (Khusus Admin)"
+                              title="Hapus Data Surat (Khusus Sisadmin)"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -1177,6 +1287,42 @@ export default function SuratList() {
                 ></textarea>
               </div>
 
+              {/* Status Akhir: Lunas / Gugur */}
+              <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-3">
+                <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  Status Pelunasan / Gugur (Opsional)
+                </span>
+                <p className="text-[11px] text-emerald-700">
+                  Tandai jika debitur telah membayar tunggakan (SP dinyatakan Gugur / Lunas). Debitur otomatis keluar dari antrean eskalasi surat peringatan.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Status Akhir</label>
+                    <select
+                      value={formData.statusAkhir}
+                      onChange={(e) => setFormData({ ...formData, statusAkhir: e.target.value })}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+                    >
+                      <option value="">— Masih Aktif / Proses SP —</option>
+                      <option value="Lunas">✅ Lunas / Gugur (Debitur Membayar Tunggakan)</option>
+                    </select>
+                  </div>
+                  {formData.statusAkhir && (
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Tanggal Lunas / Gugur</label>
+                      <input
+                        type="text"
+                        value={formData.tanggalStatusAkhir}
+                        onChange={(e) => setFormData({ ...formData, tanggalStatusAkhir: e.target.value })}
+                        placeholder="01-Jan-26 atau kosongkan"
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Upload Berkas Fisik (PDF / Scan Dokumen) Saat Tambah */}
               <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-3">
                 <div className="flex items-center justify-between">
@@ -1309,13 +1455,13 @@ export default function SuratList() {
               </button>
             </div>
 
-            {!isAdmin && (
+            {!isSisadmin && (
               <div className="mt-4 p-3 rounded-2xl bg-amber-50/90 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
                 <AlertTriangle className="w-4 h-4 text-[#FF7401] shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold">Wewenang Edit Terbatas (Role Staff)</p>
+                  <p className="font-bold">Wewenang Edit Terbatas (Role {user?.role || 'Admin'})</p>
                   <p className="text-[11px] text-amber-800 mt-0.5">
-                    Sesuai SOP pembagian wewenang, Anda dapat memperbarui tanggal tindak lanjut surat (SP 1–Default, LPJ, PK) dan catatan penagihan. Pengubahan identitas pokok Nama Debitur & Tahun dikunci khusus role Admin Kredit.
+                    Sesuai SOP pembagian wewenang, Anda dapat memperbarui tanggal tindak lanjut surat (SP 1–Default, LPJ, PK) dan status pelunasan. Pengubahan identitas pokok Nama Debitur & Tahun dikunci khusus role Sisadmin.
                   </p>
                 </div>
               </div>
@@ -1328,19 +1474,19 @@ export default function SuratList() {
                     <label className="block text-xs font-bold text-slate-700">
                       Nama Debitur / Badan Usaha
                     </label>
-                    {!isAdmin && (
+                    {!isSisadmin && (
                       <span className="text-[10px] text-amber-700 font-semibold bg-amber-100/70 px-1.5 py-0.5 rounded">
-                        Dikunci (Staff)
+                        Dikunci (Sisadmin)
                       </span>
                     )}
                   </div>
                   <input
                     type="text"
                     required
-                    disabled={!isAdmin}
+                    disabled={!isSisadmin}
                     value={formData.nama}
                     onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-                    className={`w-full px-3 py-2 text-xs rounded-xl border ${!isAdmin
+                    className={`w-full px-3 py-2 text-xs rounded-xl border ${!isSisadmin
                         ? 'bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200'
                         : 'border-slate-200 bg-white'
                       }`}
@@ -1352,7 +1498,7 @@ export default function SuratList() {
                     <label className="block text-xs font-bold text-slate-700">
                       Tahun Kredit
                     </label>
-                    {!isAdmin && (
+                    {!isSisadmin && (
                       <span className="text-[10px] text-amber-700 font-semibold bg-amber-100/70 px-1.5 py-0.5 rounded">
                         Dikunci
                       </span>
@@ -1361,10 +1507,10 @@ export default function SuratList() {
                   <input
                     type="text"
                     required
-                    disabled={!isAdmin}
+                    disabled={!isSisadmin}
                     value={formData.tahun}
                     onChange={(e) => setFormData({ ...formData, tahun: e.target.value })}
-                    className={`w-full px-3 py-2 text-xs rounded-xl border ${!isAdmin
+                    className={`w-full px-3 py-2 text-xs rounded-xl border ${!isSisadmin
                         ? 'bg-slate-100 text-slate-500 cursor-not-allowed border-slate-200'
                         : 'border-slate-200 bg-white'
                       }`}
@@ -1498,6 +1644,42 @@ export default function SuratList() {
                   onChange={(e) => setFormData({ ...formData, catatan: e.target.value })}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200"
                 ></textarea>
+              </div>
+
+              {/* Status Akhir: Lunas / Gugur */}
+              <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-3">
+                <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  Status Pelunasan / Gugur
+                </span>
+                <p className="text-[11px] text-emerald-700">
+                  Tandai jika debitur telah membayar tunggakan (SP dinyatakan Gugur / Lunas). Debitur otomatis keluar dari antrean eskalasi surat peringatan.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Status Akhir</label>
+                    <select
+                      value={formData.statusAkhir ? 'Lunas' : ''}
+                      onChange={(e) => setFormData({ ...formData, statusAkhir: e.target.value })}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+                    >
+                      <option value="">— Masih Aktif / Proses SP —</option>
+                      <option value="Lunas">✅ Lunas / Gugur (Debitur Membayar Tunggakan)</option>
+                    </select>
+                  </div>
+                  {formData.statusAkhir && (
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Tanggal Lunas / Gugur</label>
+                      <input
+                        type="text"
+                        value={formData.tanggalStatusAkhir || ''}
+                        onChange={(e) => setFormData({ ...formData, tanggalStatusAkhir: e.target.value })}
+                        placeholder="01-Jan-26 atau kosongkan"
+                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Berkas Fisik / Lampiran Dokumen Scan */}
@@ -1773,6 +1955,22 @@ export default function SuratList() {
                     </div>
                   </div>
 
+                  {/* Status Lunas / Gugur jika ada */}
+                  {selectedItem.statusAkhir && (
+                    <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-start gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-bold text-xs block">
+                          Status Penyelesaian: Debitur Lunas / Gugur
+                        </span>
+                        <p className="text-[11px] text-emerald-700 mt-0.5">
+                          Tercatat pada tanggal: <strong>{selectedItem.tanggalStatusAkhir || '-'}</strong>.
+                          Tunggakan telah dibayar/diselesaikan, sehingga proses SP gugur/reset.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Dokumen Arsip LPJ & PK */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/60 space-y-1">
@@ -1843,59 +2041,61 @@ export default function SuratList() {
               {/* TAB 2: BERKAS FISIK (PDF / SCAN DOKUMEN) */}
               {detailTab === 'lampiran' && (
                 <div className="space-y-4">
-                  {/* Upload Form Box */}
-                  <form
-                    onSubmit={handleDirectUpload}
-                    className="p-4 rounded-2xl bg-blue-50/40 border border-blue-100 space-y-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#014181] flex items-center gap-1.5 uppercase tracking-wider">
-                        <Upload className="w-4 h-4 text-[#014181]" />
-                        Unggah Berkas Scan Asli (PDF / JPG)
-                      </span>
-                      <span className="text-[10px] text-slate-400">Supabase Storage / Cloud</span>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                      <div className="sm:col-span-4">
-                        <select
-                          value={uploadKategori}
-                          onChange={(e) => setUploadKategori(e.target.value)}
-                          className="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-200 bg-white font-medium focus:ring-2 focus:ring-[#014181] focus:outline-none"
-                        >
-                          <option value="Scan Surat LPJ">Scan Surat LPJ</option>
-                          <option value="Scan Perjanjian Kredit (PK)">Scan Dokumen PK</option>
-                          <option value="Scan Surat Peringatan (SP)">Scan Surat SP</option>
-                          <option value="Dokumen Agunan / Jaminan">Dokumen Agunan</option>
-                          <option value="Surat Kuasa / Lainnya">Berkas Lainnya</option>
-                        </select>
+                  {/* Upload Form Box (Hanya untuk Admin / Staff) */}
+                  {canEdit && (
+                    <form
+                      onSubmit={handleDirectUpload}
+                      className="p-4 rounded-2xl bg-blue-50/40 border border-blue-100 space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-[#014181] flex items-center gap-1.5 uppercase tracking-wider">
+                          <Upload className="w-4 h-4 text-[#014181]" />
+                          Unggah Berkas Scan Asli (PDF / JPG)
+                        </span>
+                        <span className="text-[10px] text-slate-400">Supabase Storage / Cloud</span>
                       </div>
 
-                      <div className="sm:col-span-5">
-                        <input
-                          type="file"
-                          accept=".pdf,image/jpeg,image/png,image/webp"
-                          onChange={(e) => setUploadSelectedFile(e.target.files?.[0] || null)}
-                          className="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-white file:border file:border-slate-200 file:text-slate-700 hover:file:bg-slate-100 cursor-pointer"
-                        />
-                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                        <div className="sm:col-span-4">
+                          <select
+                            value={uploadKategori}
+                            onChange={(e) => setUploadKategori(e.target.value)}
+                            className="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-200 bg-white font-medium focus:ring-2 focus:ring-[#014181] focus:outline-none"
+                          >
+                            <option value="Scan Surat LPJ">Scan Surat LPJ</option>
+                            <option value="Scan Perjanjian Kredit (PK)">Scan Dokumen PK</option>
+                            <option value="Scan Surat Peringatan (SP)">Scan Surat SP</option>
+                            <option value="Dokumen Agunan / Jaminan">Dokumen Agunan</option>
+                            <option value="Surat Kuasa / Lainnya">Berkas Lainnya</option>
+                          </select>
+                        </div>
 
-                      <div className="sm:col-span-3">
-                        <button
-                          type="submit"
-                          disabled={!uploadSelectedFile || isUploading}
-                          className="w-full py-2 px-3 bg-[#014181] hover:bg-[#002d5b] disabled:opacity-40 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-2xs"
-                        >
-                          {isUploading ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <Upload className="w-3.5 h-3.5" />
-                          )}
-                          <span>Unggah File</span>
-                        </button>
+                        <div className="sm:col-span-5">
+                          <input
+                            type="file"
+                            accept=".pdf,image/jpeg,image/png,image/webp"
+                            onChange={(e) => setUploadSelectedFile(e.target.files?.[0] || null)}
+                            className="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-white file:border file:border-slate-200 file:text-slate-700 hover:file:bg-slate-100 cursor-pointer"
+                          />
+                        </div>
+
+                        <div className="sm:col-span-3">
+                          <button
+                            type="submit"
+                            disabled={!uploadSelectedFile || isUploading}
+                            className="w-full py-2 px-3 bg-[#014181] hover:bg-[#002d5b] disabled:opacity-40 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-2xs"
+                          >
+                            {isUploading ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Upload className="w-3.5 h-3.5" />
+                            )}
+                            <span>Unggah File</span>
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </form>
+                    </form>
+                  )}
 
                   {/* List of Files */}
                   {!selectedItem.lampiran || selectedItem.lampiran.length === 0 ? (
@@ -1965,17 +2165,19 @@ export default function SuratList() {
                                 <Download className="w-3.5 h-3.5" />
                                 <span className="hidden sm:inline">Unduh</span>
                               </a>
-                              <button
-                                onClick={async () => {
-                                  if (confirm(`Hapus berkas scan "${f.nama_file}"?`)) {
-                                    await deleteAttachment(selectedItem.id, f.id, user)
-                                  }
-                                }}
-                                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                                title="Hapus berkas ini"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              {canEdit && (
+                                <button
+                                  onClick={async () => {
+                                    if (confirm(`Hapus berkas scan "${f.nama_file}"?`)) {
+                                      await deleteAttachment(selectedItem.id, f.id, user)
+                                    }
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                                  title="Hapus berkas ini"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}

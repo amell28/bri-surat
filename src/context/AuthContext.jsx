@@ -21,6 +21,15 @@ export function AuthProvider({ children }) {
           if (parsed?.avatar && parsed.avatar.includes('unsplash.com')) {
             parsed.avatar = null
           }
+          // Role migration: Staff -> Admin, Admin lama (Rizky/Magang/Supervisor) -> Sisadmin
+          if (parsed?.role === 'Staff') {
+            parsed.role = 'Admin'
+          } else if (
+            parsed?.role === 'Admin' &&
+            (parsed?.pn === '00192847' || parsed?.pn === 'MAGANG-501' || parsed?.email?.includes('rizky') || parsed?.email?.includes('magang'))
+          ) {
+            parsed.role = 'Sisadmin'
+          }
           return parsed
         } catch (e) {
           return null
@@ -332,9 +341,20 @@ export function AuthProvider({ children }) {
   }
 
   // Role permissions
-  const roleName = (user?.role || '').toLowerCase()
-  const isAdmin = roleName === 'admin' || roleName === 'supervisor'
-  const isStaff = !isAdmin
+  // Sisadmin (dulu Admin): Akses penuh tertinggi (kelola akun staf/pengguna, hapus surat, supabase)
+  // Admin (dulu Staff): Operasional (input & update berkas surat, upload lampiran, tandai lunas/gugur)
+  // User: Read-only (hanya melihat data arsip, tidak bisa edit/tambah/hapus)
+  const roleLower = (user?.role || '').toLowerCase()
+  const isSisadmin =
+    roleLower === 'sisadmin' ||
+    roleLower === 'supervisor' ||
+    (roleLower === 'admin' && (user?.pn === '00192847' || user?.pn === 'MAGANG-501' || user?.email?.includes('rizky') || user?.email?.includes('magang')))
+  const isAdmin = !isSisadmin && (roleLower === 'admin' || roleLower === 'staff' || roleLower === 'operator' || roleLower === 'mantri')
+  const isUser = roleLower === 'user' || roleLower === 'viewer' || roleLower === 'tamu' || (!isSisadmin && !isAdmin)
+  const canEdit = isSisadmin || isAdmin
+  const canDelete = isSisadmin
+  const canManageUsers = isSisadmin
+  const isStaff = isAdmin // alias backwards-compatible
 
   return (
     <AuthContext.Provider
@@ -342,8 +362,13 @@ export function AuthProvider({ children }) {
         user,
         users,
         loading,
+        isSisadmin,
         isAdmin,
         isStaff,
+        isUser,
+        canEdit,
+        canDelete,
+        canManageUsers,
         login,
         register,
         logout,

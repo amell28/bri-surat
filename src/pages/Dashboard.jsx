@@ -12,11 +12,8 @@ import {
   TrendingUp,
   FileCheck,
   CheckCircle2,
-  Clock,
   ArrowUpRight,
-  Sparkles,
-  Database,
-  Activity
+  Database
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useSurat } from '../context/SuratContext'
@@ -24,8 +21,8 @@ import StatCard from '../components/StatCard'
 import SupabaseSyncModal from '../components/SupabaseSyncModal'
 
 export default function Dashboard() {
-  const { user, isAdmin } = useAuth()
-  const { suratList, stats, exportToCsv, isConfigured, syncStatus } = useSurat()
+  const { user, isSisadmin, canEdit } = useAuth()
+  const { suratList, stats, exportToCsv, isConfigured } = useSurat()
   const navigate = useNavigate()
 
   const [quickQuery, setQuickQuery] = useState('')
@@ -65,7 +62,7 @@ export default function Dashboard() {
                 <span className="w-2 h-2 rounded-full bg-[#FF7401] animate-pulse"></span>
                 <span>KCP Iskandar Palembang</span>
                 <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-[#FF7401] text-white shadow-xs">
-                  {user?.role || 'Staff'}
+                  {user?.role || 'Admin'}
                 </span>
               </div>
 
@@ -94,8 +91,8 @@ export default function Dashboard() {
               to="/surat"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FF7401] hover:bg-[#e06500] text-white text-xs font-bold shadow-lg shadow-[#FF7401]/30 hover:scale-105 active:scale-95 transition-all duration-200"
             >
-              <PlusCircle className="w-4 h-4 animate-spin-slow" />
-              <span>Kelola & Input Surat</span>
+              <PlusCircle className="w-4 h-4" />
+              <span>{canEdit ? 'Kelola & Input Surat' : 'Buka Data Arsip Surat'}</span>
             </Link>
             <button
               onClick={() => exportToCsv()}
@@ -104,7 +101,7 @@ export default function Dashboard() {
               <Download className="w-4 h-4" />
               <span>Unduh Rekap CSV</span>
             </button>
-            {isAdmin && (
+            {isSisadmin && (
               <button
                 onClick={() => setIsSupabaseModalOpen(true)}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white text-xs font-bold hover:scale-105 active:scale-95 transition-all duration-200"
@@ -212,7 +209,7 @@ export default function Dashboard() {
       </div>
 
       {/* 4 Summary Stat Cards with Staggered Entrance */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="animate-slide-up-fade stagger-1">
           <StatCard
             title="Total Debitur Terarsip"
@@ -251,6 +248,16 @@ export default function Dashboard() {
             icon={AlertTriangle}
             colorScheme="amber"
             onClick={() => navigate('/surat?filter=urgent')}
+          />
+        </div>
+        <div className="animate-slide-up-fade stagger-4">
+          <StatCard
+            title="Debitur Lunas / Gugur"
+            value={stats.lunasCount}
+            subtext="Tanpa SP aktif, sudah selesai"
+            icon={CheckCircle2}
+            colorScheme="emerald"
+            onClick={() => navigate('/surat?filter=lunas')}
           />
         </div>
       </div>

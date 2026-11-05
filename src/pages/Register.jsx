@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { UserPlus, User, Mail, Briefcase, Lock, ArrowLeft, Building2, Eye, EyeOff, ShieldCheck } from 'lucide-react'
+import { UserPlus, User, Mail, Lock, ArrowLeft, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import briLogo from '../assets/BRI-Icon.png'
 
@@ -11,8 +11,8 @@ export default function Register() {
     nama: '',
     pn: '',
     email: '',
-    jabatan: 'Staff Administrasi Kredit',
-    role: 'Staff',
+    jabatan: 'Admin Kredit & Arsip',
+    role: 'Admin',
     password: '',
     telepon: ''
   })
@@ -47,7 +47,7 @@ export default function Register() {
       } else {
         setError(res.message || 'Gagal mendaftar. Silakan coba kembali.')
       }
-    } catch (err) {
+    } catch {
       setLoading(false)
       setError('Terjadi kendala saat registrasi ke Supabase.')
     }
@@ -176,8 +176,9 @@ export default function Register() {
                   onChange={handleChange}
                   className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#014181]"
                 >
-                  <option value="Staff">Staff </option>
-                  <option value="Admin">Admin </option>
+                  <option value="Admin">Admin (Operasional - Input & Update Surat)</option>
+                  <option value="Sisadmin">Sisadmin (Akses Penuh Kelola Surat & Pengguna)</option>
+                  <option value="User">User (Hanya Melihat / Read-Only)</option>
                 </select>
               </div>
             </div>

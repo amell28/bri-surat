@@ -43,7 +43,7 @@ export default function Login() {
       } else {
         setError(res.message || 'Gagal masuk. Periksa kembali NIP/PN atau Email Anda.')
       }
-    } catch (err) {
+    } catch {
       setIsLoading(false)
       setError('Gagal menghubungkan ke database server.')
     }

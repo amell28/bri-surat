@@ -4,7 +4,6 @@ import {
   Save,
   Check,
   Lock,
-  Sparkles,
   Camera,
   Upload,
   Trash2

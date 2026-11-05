@@ -57,6 +57,8 @@ export function SuratProvider({ children }) {
     pk: row.pk || '-',
     pkUrgent: Boolean(row.pk_urgent ?? row.pkUrgent),
     status: row.status || 'Lengkap / Normal',
+    statusAkhir: row.status_akhir || row.statusAkhir || '', // '' | 'Lunas' | 'Gugur'
+    tanggalStatusAkhir: row.tanggal_status_akhir || row.tanggalStatusAkhir || '',
     catatan: row.catatan || '',
     lampiran: Array.isArray(row.lampiran) ? row.lampiran : (typeof row.lampiran === 'string' ? JSON.parse(row.lampiran || '[]') : []),
     riwayat_log: Array.isArray(row.riwayat_log) ? row.riwayat_log : (typeof row.riwayat_log === 'string' ? JSON.parse(row.riwayat_log || '[]') : []),
@@ -82,6 +84,8 @@ export function SuratProvider({ children }) {
     pk: item.pk || '-',
     pk_urgent: Boolean(item.pkUrgent ?? item.pk_urgent),
     status: item.status || 'Lengkap / Normal',
+    status_akhir: item.statusAkhir || '',
+    tanggal_status_akhir: item.tanggalStatusAkhir || '',
     catatan: item.catatan || '',
     lampiran: item.lampiran || [],
     riwayat_log: item.riwayat_log || [],
@@ -218,6 +222,7 @@ export function SuratProvider({ children }) {
 
   // Helper status calculation
   function calculateStatus(item) {
+    if (item.statusAkhir && item.statusAkhir !== '') return 'Lunas / Gugur'
     if (item.spDefault && item.spDefault !== '-') return 'SP DEFAULT'
     if (item.sp3 && item.sp3 !== '-') return 'SP 3'
     if (item.sp2 && item.sp2 !== '-') return 'SP 2'
@@ -260,6 +265,8 @@ export function SuratProvider({ children }) {
       pk: newSurat.pk || `PK - ${newSurat.nama.toUpperCase()}`,
       pkUrgent: Boolean(newSurat.pkUrgent),
       status: calculateStatus(newSurat),
+      statusAkhir: newSurat.statusAkhir || '',
+      tanggalStatusAkhir: newSurat.tanggalStatusAkhir || '',
       catatan: newSurat.catatan || 'Surat debitur baru didaftarkan.',
       lampiran: newSurat.lampiran || [],
       riwayat_log: newSurat.riwayat_log && newSurat.riwayat_log.length > 0 ? newSurat.riwayat_log : initialLog,
@@ -520,6 +527,62 @@ export function SuratProvider({ children }) {
     document.body.removeChild(link)
   }
 
+  // Helper: parse tanggal SP (format: "01-Mar-26", "01-Mar-2026", ISO, dll)
+  function parseSPDate(raw) {
+    if (!raw || raw === '-') return null
+    // Try ISO format first
+    let d = new Date(raw)
+    if (!isNaN(d.getTime())) return d
+    // Try "DD-Mon-YY" or "DD-Mon-YYYY"
+    const match = raw.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2,4})$/)
+    if (match) {
+      const months = { jan:0,feb:1,mar:2,apr:3,mei:4,may:4,jun:5,jul:6,agu:7,aug:7,sep:8,okt:9,oct:9,nov:10,des:11,dec:11 }
+      const mo = months[match[2].toLowerCase()]
+      const yr = match[3].length === 2 ? (parseInt(match[3]) + 2000) : parseInt(match[3])
+      if (mo !== undefined) {
+        d = new Date(yr, mo, parseInt(match[1]))
+        if (!isNaN(d.getTime())) return d
+      }
+    }
+    return null
+  }
+
+  // Debitur yang punya SP 1 >= 14 hari lalu tapi belum punya SP 2
+  // (exclude jika sudah lunas/gugur)
+  const sp1NeedsSP2 = suratList.filter(s => {
+    if (s.statusAkhir && s.statusAkhir !== '') return false // sudah lunas/gugur
+    if (!s.sp1 || s.sp1 === '-') return false
+    if (s.sp2 && s.sp2 !== '-') return false // sudah ada SP 2
+    if (s.spDefault && s.spDefault !== '-') return false // sudah default
+    const sp1Date = parseSPDate(s.sp1)
+    if (!sp1Date) return false
+    const diffDays = (Date.now() - sp1Date.getTime()) / (1000 * 60 * 60 * 24)
+    return diffDays >= 14
+  })
+
+  // Debitur yang punya SP 2 >= 14 hari lalu tapi belum punya SP 3
+  const sp2NeedsSP3 = suratList.filter(s => {
+    if (s.statusAkhir && s.statusAkhir !== '') return false
+    if (!s.sp2 || s.sp2 === '-') return false
+    if (s.sp3 && s.sp3 !== '-') return false // sudah ada SP 3
+    if (s.spDefault && s.spDefault !== '-') return false // sudah default
+    const sp2Date = parseSPDate(s.sp2)
+    if (!sp2Date) return false
+    const diffDays = (Date.now() - sp2Date.getTime()) / (1000 * 60 * 60 * 24)
+    return diffDays >= 14
+  })
+
+  // Debitur yang punya SP 3 >= 14 hari lalu tapi belum ada SP Default
+  const sp3NeedsDefault = suratList.filter(s => {
+    if (s.statusAkhir && s.statusAkhir !== '') return false
+    if (!s.sp3 || s.sp3 === '-') return false
+    if (s.spDefault && s.spDefault !== '-') return false // sudah default
+    const sp3Date = parseSPDate(s.sp3)
+    if (!sp3Date) return false
+    const diffDays = (Date.now() - sp3Date.getTime()) / (1000 * 60 * 60 * 24)
+    return diffDays >= 14
+  })
+
   // Summary Metrics
   const stats = {
     total: suratList.length,
@@ -527,7 +590,24 @@ export function SuratProvider({ children }) {
     sp2Count: suratList.filter(s => s.sp2 && s.sp2 !== '-').length,
     sp3Count: suratList.filter(s => s.sp3 && s.sp3 !== '-').length,
     spDefaultCount: suratList.filter(s => s.spDefault && s.spDefault !== '-').length,
-    urgentCount: suratList.filter(s => s.sp1Urgent || s.sp3Urgent || s.lpjUrgent || s.pkUrgent || s.spDefaultUrgent).length,
+    urgentCount: suratList.filter(s =>
+      !s.statusAkhir && // exclude yang sudah lunas/gugur dari urgent count
+      (s.sp1Urgent || s.sp3Urgent || s.lpjUrgent || s.pkUrgent || s.spDefaultUrgent)
+    ).length,
+    // Lunas/Gugur: sudah ditandai statusAkhir ATAU tidak ada SP/default/urgent sama sekali
+    lunasCount: suratList.filter(s =>
+      (s.statusAkhir && s.statusAkhir !== '') ||
+      (
+        (!s.sp1 || s.sp1 === '-') &&
+        (!s.sp2 || s.sp2 === '-') &&
+        (!s.sp3 || s.sp3 === '-') &&
+        (!s.spDefault || s.spDefault === '-') &&
+        !s.sp1Urgent && !s.sp3Urgent && !s.lpjUrgent && !s.pkUrgent && !s.spDefaultUrgent
+      )
+    ).length,
+    sp1NeedsSP2,
+    sp2NeedsSP3,
+    sp3NeedsDefault,
     tahunList: Array.from(new Set(suratList.map(s => s.tahun))).filter(Boolean).sort((a, b) => b - a),
     yearDistribution: suratList.reduce((acc, curr) => {
       const yr = curr.tahun || 'Lainnya'

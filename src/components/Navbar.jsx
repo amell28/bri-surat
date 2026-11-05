@@ -4,11 +4,7 @@ import {
   Menu,
   Search,
   Bell,
-  CheckCircle2,
   AlertTriangle,
-  Building,
-  User,
-  LogOut,
   X,
   Database
 } from 'lucide-react'
@@ -18,7 +14,7 @@ import SupabaseSyncModal from './SupabaseSyncModal'
 import Avatar from './Avatar'
 
 export default function Navbar({ onMenuToggle }) {
-  const { user, isAdmin, logout } = useAuth()
+  const { user, isSisadmin } = useAuth()
   const { stats, suratList, isConfigured } = useSurat()
   const [showNotifications, setShowNotifications] = useState(false)
   const [showSupabaseModal, setShowSupabaseModal] = useState(false)
@@ -153,8 +149,8 @@ export default function Navbar({ onMenuToggle }) {
           )}
         </div>
 
-        {/* Supabase Status Chip / Trigger (Khusus Admin) */}
-        {isAdmin && (
+        {/* Supabase Status Chip / Trigger (Khusus Sisadmin) */}
+        {isSisadmin && (
           <button
             onClick={() => setShowSupabaseModal(true)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition shadow-2xs ${
@@ -162,7 +158,7 @@ export default function Navbar({ onMenuToggle }) {
                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
                 : 'bg-blue-50 text-[#014181] border border-blue-200 hover:bg-blue-100'
             }`}
-            title="Sinkronisasi Database Supabase (Khusus Admin)"
+            title="Sinkronisasi Database Supabase (Khusus Sisadmin)"
           >
             <Database className="w-3.5 h-3.5 text-[#014181]" />
             <span className="hidden sm:inline">
@@ -187,7 +183,7 @@ export default function Navbar({ onMenuToggle }) {
               {user?.nama?.split(' ')[0] || 'Staf'}
             </span>
             <span className="block text-[10px] text-[#014181] font-medium leading-none">
-              {user?.role || 'Staff'}
+              {user?.role || 'Admin'}
             </span>
           </div>
         </div>

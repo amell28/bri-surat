@@ -67,7 +67,7 @@ export const testSupabaseConnection = async () => {
   }
 
   try {
-    const { data, error } = await client.from('surat_debitur').select('id').limit(1)
+    const { error } = await client.from('surat_debitur').select('id').limit(1)
     if (error) {
       return { success: false, message: error.message }
     }

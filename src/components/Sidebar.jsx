@@ -8,7 +8,8 @@ import {
   LogOut,
   FileClock,
   ShieldAlert,
-  X
+  X,
+  Bell
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useSurat } from '../context/SuratContext'
@@ -16,7 +17,7 @@ import briLogo from '../assets/BRI-Icon.png'
 import Avatar from './Avatar'
 
 export default function Sidebar({ isOpen, setIsOpen }) {
-  const { user, isAdmin, logout } = useAuth()
+  const { user, isSisadmin, logout } = useAuth()
   const { stats } = useSurat()
   const navigate = useNavigate()
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
@@ -38,6 +39,11 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     navigate('/login')
   }
 
+  const sp1Count = stats.sp1NeedsSP2?.length || 0
+  const sp2Count = stats.sp2NeedsSP3?.length || 0
+  const sp3Count = stats.sp3NeedsDefault?.length || 0
+  const totalEskalasi = sp1Count + sp2Count + sp3Count
+
   const navItems = [
     {
       to: '/dashboard',
@@ -51,11 +57,18 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       icon: FileText,
       badge: stats.total
     },
-    ...(isAdmin
+    {
+      to: '/tindak-lanjut',
+      label: 'Tindak Lanjut SP',
+      icon: Bell,
+      badge: totalEskalasi > 0 ? totalEskalasi : null,
+      badgeUrgent: true
+    },
+    ...(isSisadmin
       ? [
           {
             to: '/users',
-            label: 'Manajemen Staf',
+            label: 'Manajemen Pengguna',
             icon: Users,
             badge: null
           }
@@ -74,7 +87,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       {/* Mobile backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden backdrop-blur-xs"
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden backdrop-blur-sm"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -134,7 +147,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                   <span>{item.label}</span>
                 </div>
                 {item.badge !== null && (
-                  <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-white/20 text-white">
+                  <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${item.badgeUrgent ? 'bg-rose-500 text-white animate-pulse' : 'bg-white/20 text-white'}`}>
                     {item.badge}
                   </span>
                 )}
@@ -142,29 +155,102 @@ export default function Sidebar({ isOpen, setIsOpen }) {
             )
           })}
 
-          <div className="pt-6 px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-blue-300/80">
-            Status Monitoring
+          {/* Status Monitoring Per SP Tindak Lanjut */}
+          <div className="pt-5 px-3 mb-2 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-blue-300/80">
+            <span>Tindak Lanjut per SP</span>
+            {totalEskalasi > 0 && (
+              <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-amber-500/30 text-amber-300 border border-amber-500/40">
+                {totalEskalasi} SP
+              </span>
+            )}
           </div>
 
-          <div className="p-3.5 mx-1 rounded-xl bg-white/5 border border-white/10 space-y-2 text-xs">
-            <div className="flex items-center justify-between text-blue-200">
-              <span className="flex items-center gap-1.5">
+          <div className="p-2.5 mx-1 rounded-2xl bg-white/5 border border-white/10 space-y-1 text-xs">
+            {/* SP 1 -> Perlu SP 2 */}
+            <NavLink
+              to="/tindak-lanjut?tab=sp2"
+              onClick={() => setIsOpen && setIsOpen(false)}
+              className="flex items-center justify-between px-2.5 py-2 rounded-xl text-blue-100/90 hover:bg-white/10 hover:text-white transition group"
+            >
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                <span className="text-xs">Perlu Kirim SP 2</span>
+              </div>
+              <span className={`px-2 py-0.5 rounded-full text-[11px] font-black ${
+                sp1Count > 0 ? 'bg-amber-500 text-white shadow-xs' : 'bg-white/10 text-blue-200'
+              }`}>
+                {sp1Count}
+              </span>
+            </NavLink>
+
+            {/* SP 2 -> Perlu SP 3 */}
+            <NavLink
+              to="/tindak-lanjut?tab=sp3"
+              onClick={() => setIsOpen && setIsOpen(false)}
+              className="flex items-center justify-between px-2.5 py-2 rounded-xl text-blue-100/90 hover:bg-white/10 hover:text-white transition group"
+            >
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-orange-400 shrink-0" />
+                <span className="text-xs">Perlu Kirim SP 3</span>
+              </div>
+              <span className={`px-2 py-0.5 rounded-full text-[11px] font-black ${
+                sp2Count > 0 ? 'bg-orange-500 text-white shadow-xs' : 'bg-white/10 text-blue-200'
+              }`}>
+                {sp2Count}
+              </span>
+            </NavLink>
+
+            {/* SP 3 -> Perlu SP Default / Lelang */}
+            <NavLink
+              to="/tindak-lanjut?tab=default"
+              onClick={() => setIsOpen && setIsOpen(false)}
+              className="flex items-center justify-between px-2.5 py-2 rounded-xl text-blue-100/90 hover:bg-white/10 hover:text-white transition group"
+            >
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-rose-400 shrink-0 animate-pulse" />
+                <span className="text-xs">Perlu SP Default (Lelang)</span>
+              </div>
+              <span className={`px-2 py-0.5 rounded-full text-[11px] font-black ${
+                sp3Count > 0 ? 'bg-rose-500 text-white shadow-xs animate-pulse' : 'bg-white/10 text-blue-200'
+              }`}>
+                {sp3Count}
+              </span>
+            </NavLink>
+          </div>
+
+          {/* Status Monitoring Keseluruhan */}
+          <div className="pt-4 px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-blue-300/80">
+            Monitoring Arsip
+          </div>
+
+          <div className="p-3 mx-1 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-xs">
+            <NavLink
+              to="/surat?filter=sp_default"
+              onClick={() => setIsOpen && setIsOpen(false)}
+              className="flex items-center justify-between text-blue-200 hover:text-white transition"
+            >
+              <span className="flex items-center gap-2">
                 <ShieldAlert className="w-4 h-4 text-[#FF7401]" />
-                SP Default
+                <span>SP Default Terdata</span>
               </span>
               <span className="font-bold text-white px-2 py-0.5 rounded bg-red-500/30 text-red-200">
                 {stats.spDefaultCount}
               </span>
-            </div>
-            <div className="flex items-center justify-between text-blue-200">
-              <span className="flex items-center gap-1.5">
+            </NavLink>
+
+            <NavLink
+              to="/surat?filter=urgent"
+              onClick={() => setIsOpen && setIsOpen(false)}
+              className="flex items-center justify-between text-blue-200 hover:text-white transition"
+            >
+              <span className="flex items-center gap-2">
                 <FileClock className="w-4 h-4 text-amber-300" />
-                Perlu Cek Berkas
+                <span>Perlu Cek Berkas</span>
               </span>
               <span className="font-bold text-white px-2 py-0.5 rounded bg-amber-500/30 text-amber-200">
                 {stats.urgentCount}
               </span>
-            </div>
+            </NavLink>
           </div>
         </div>
 
@@ -183,7 +269,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       {/* Modal Konfirmasi Logout */}
       {showLogoutConfirm && (
         <div
-          className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+          className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150"
           onClick={() => setShowLogoutConfirm(false)}
         >
           <div
@@ -231,10 +317,14 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                   <p className="text-[10px] text-slate-500 truncate flex items-center gap-1.5">
                     <span>PN: {user.pn || '-'}</span>
                     <span>•</span>
-                    <span className={`px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase ${
-                      user.role === 'Admin' ? 'bg-[#FF7401]/15 text-[#FF7401]' : 'bg-[#014181]/15 text-[#014181]'
+                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase ${
+                      user.role === 'Sisadmin' || user.role === 'Supervisor'
+                        ? 'bg-[#FF7401]/15 text-[#FF7401]'
+                        : user.role === 'User'
+                          ? 'bg-emerald-500/15 text-emerald-400'
+                          : 'bg-[#014181]/15 text-[#014181]'
                     }`}>
-                      {user.role || 'Staff'}
+                      {user.role === 'User' ? 'User (Lihat Saja)' : user.role === 'Sisadmin' ? 'Sisadmin' : (user.role || 'Admin')}
                     </span>
                   </p>
                 </div>
