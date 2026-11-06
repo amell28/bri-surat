@@ -116,7 +116,7 @@ export default function Login() {
               </div>
               <div>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-[#FF7401] text-white shadow-xs">
-                 Portal Arsip 2.0
+                 Portal Arsip 
                 </span>
                 <h2 className="text-lg font-bold text-white tracking-tight leading-snug mt-1">
                   BRI KCP Iskandar
