@@ -84,7 +84,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-3 sm:p-6 lg:p-10 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-white flex items-center justify-center p-3 sm:p-6 lg:p-10 relative overflow-hidden font-sans">
       {/* Decorative Gradient Glow Orbs */}
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#014181]/40 rounded-full blur-3xl pointer-events-none animate-pulse-glow"></div>
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#FF7401]/25 rounded-full blur-3xl pointer-events-none animate-pulse-glow" style={{ animationDelay: '2s' }}></div>
