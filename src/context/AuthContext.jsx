@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { initialUsersList } from '../data/initialUsersData'
-import { initSupabaseClient, isSupabaseConfigured } from '../lib/supabase'
+import { initSupabaseClient } from '../lib/supabase'
 import { hashPassword, verifyPassword } from '../lib/crypto'
 
 const AuthContext = createContext(null)
@@ -31,7 +31,7 @@ export function AuthProvider({ children }) {
             parsed.role = 'Sisadmin'
           }
           return parsed
-        } catch (e) {
+        } catch {
           return null
         }
       }
@@ -65,8 +65,30 @@ export function AuthProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    fetchUsersFromSupabase()
-  }, [fetchUsersFromSupabase])
+    let isMounted = true
+    const client = initSupabaseClient()
+    if (!client) return
+
+    client
+      .from('staf_pengguna')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (isMounted && !error && data && data.length > 0) {
+          setUsers(data)
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('bri_surat_users', JSON.stringify(data))
+          }
+        }
+      })
+      .catch((err) => {
+        console.warn('Gagal memuat staf_pengguna dari Supabase:', err)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   // Sync active user to sessionStorage
   useEffect(() => {
@@ -222,7 +244,7 @@ export function AuthProvider({ children }) {
             setUser(authProfile)
             return { success: true, user: authProfile, source: 'supabase_auth' }
           }
-        } catch (e) {
+        } catch {
           // ignore
         }
       }
@@ -255,6 +277,46 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false)
     }
+  }
+
+  // ==========================================
+  // LOGIN SEBAGAI GUEST / DEMO
+  // Memberikan akses instan untuk tamu / peninjau tanpa perlu ketik kredensial
+  // ==========================================
+  const loginAsGuest = (roleChoice = 'User') => {
+    const isSis = roleChoice === 'Sisadmin'
+    const isAdminChoice = roleChoice === 'Admin'
+
+    const guestProfile = {
+      id: `GUEST-${Date.now()}`,
+      nama: isSis
+        ? 'Tamu Sisadmin (Demo)'
+        : isAdminChoice
+          ? 'Tamu Admin Kredit (Demo)'
+          : 'Tamu Peninjau (Guest)',
+      pn: isSis ? 'GUEST-SIS' : isAdminChoice ? 'GUEST-ADM' : 'GUEST-001',
+      email: isSis
+        ? 'guest.sisadmin@bri.co.id'
+        : isAdminChoice
+          ? 'guest.admin@bri.co.id'
+          : 'guest.viewer@bri.co.id',
+      jabatan: isSis
+        ? 'Tamu Sisadmin (Akses Penuh)'
+        : isAdminChoice
+          ? 'Tamu Admin Kredit (Operasional)'
+          : 'Tamu Peninjau (Read Only)',
+      role: roleChoice,
+      unit: 'KCP Iskandar Palembang',
+      status: 'Aktif',
+      avatar: null,
+      isGuest: true
+    }
+
+    setUser(guestProfile)
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('bri_surat_current_user', JSON.stringify(guestProfile))
+    }
+    return { success: true, user: guestProfile }
   }
 
   // LOGOUT
@@ -370,6 +432,7 @@ export function AuthProvider({ children }) {
         canDelete,
         canManageUsers,
         login,
+        loginAsGuest,
         register,
         logout,
         updateProfile,

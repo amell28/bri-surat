@@ -896,7 +896,7 @@ export default function SuratList() {
                       <td className="py-3 px-3 text-center whitespace-nowrap">
                         {item.statusAkhir ? (
                           <span className="px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1 border bg-emerald-100 text-emerald-800 border-emerald-300">
-                            ✅ Lunas / Gugur
+                            <CheckCircle2 className="w-3 h-3 text-emerald-700" /> Lunas / Gugur
                             {item.tanggalStatusAkhir && <span className="font-normal opacity-70">· {item.tanggalStatusAkhir}</span>}
                           </span>
                         ) : (
@@ -1125,14 +1125,14 @@ export default function SuratList() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Nama Debitur / CV / PT *
+                    Nama / Identitas Debitur *
                   </label>
                   <input
                     type="text"
                     required
                     value={formData.nama}
                     onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-                    placeholder="Contoh: PT Sriwijaya Mandiri / Budi Santoso"
+                    placeholder="Contoh: DEBITUR101"
                     className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#014181] focus:outline-none"
                   />
                 </div>
@@ -1305,7 +1305,7 @@ export default function SuratList() {
                       className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none"
                     >
                       <option value="">— Masih Aktif / Proses SP —</option>
-                      <option value="Lunas">✅ Lunas / Gugur (Debitur Membayar Tunggakan)</option>
+                      <option value="Lunas">Lunas / Gugur (Debitur Membayar Tunggakan)</option>
                     </select>
                   </div>
                   {formData.statusAkhir && (
@@ -1472,7 +1472,7 @@ export default function SuratList() {
                 <div className="sm:col-span-2">
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-xs font-bold text-slate-700">
-                      Nama Debitur / Badan Usaha
+                      Nama / Identitas Debitur
                     </label>
                     {!isSisadmin && (
                       <span className="text-[10px] text-amber-700 font-semibold bg-amber-100/70 px-1.5 py-0.5 rounded">
@@ -1664,7 +1664,7 @@ export default function SuratList() {
                       className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-400 focus:outline-none"
                     >
                       <option value="">— Masih Aktif / Proses SP —</option>
-                      <option value="Lunas">✅ Lunas / Gugur (Debitur Membayar Tunggakan)</option>
+                      <option value="Lunas">Lunas / Gugur (Debitur Membayar Tunggakan)</option>
                     </select>
                   </div>
                   {formData.statusAkhir && (

@@ -10,7 +10,7 @@ import {
 } from '../lib/supabase'
 
 const SuratContext = createContext(null)
-const STORAGE_KEY = 'bri_surat_data_v4'
+const STORAGE_KEY = 'bri_surat_data_v5'
 
 export function SuratProvider({ children }) {
   const [suratList, setSuratList] = useState(() => {
@@ -18,6 +18,7 @@ export function SuratProvider({ children }) {
     localStorage.removeItem('bri_surat_data')
     localStorage.removeItem('bri_surat_dummy_data_v2')
     localStorage.removeItem('bri_surat_data_v3')
+    localStorage.removeItem('bri_surat_data_v4')
 
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {

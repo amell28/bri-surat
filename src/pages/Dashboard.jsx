@@ -127,7 +127,7 @@ export default function Dashboard() {
               Penelusuran Cepat Berkas Debitur (Fast Search)
             </h2>
             <p className="text-xs text-slate-500">
-              Ketik nama debitur atau badan usaha (misal: "Budi Santoso", "Sriwijaya", "Ahmad Fauzi", "Ampera")
+              Ketik kode debitur (misal: "DEBITUR001", "DEBITUR015", "DEBITUR050")
             </p>
           </div>
         </div>
@@ -137,7 +137,7 @@ export default function Dashboard() {
             type="text"
             value={quickQuery}
             onChange={(e) => setQuickQuery(e.target.value)}
-            placeholder="Ketik nama nasabah, tahun kredit, atau nomor dokumen di sini..."
+            placeholder="Ketik kode debitur (misal: DEBITUR001), tahun kredit, atau nomor dokumen..."
             className="w-full pl-11 pr-24 py-3.5 text-sm rounded-2xl border-2 border-slate-200 bg-slate-50 focus:bg-white focus:border-[#014181] focus:ring-4 focus:ring-[#014181]/15 text-slate-900 placeholder-slate-400 transition-all duration-200"
           />
           <Search className="w-5 h-5 text-slate-400 absolute left-4 top-4" />
